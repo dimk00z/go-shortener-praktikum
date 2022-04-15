@@ -1,85 +1,59 @@
 package handlers
 
 import (
-	"encoding/json"
 	"fmt"
 	"net/http"
 	"strings"
-	"time"
+
+	"github.com/dimk00z/go-shortener-praktikum/internal/storage"
+	"github.com/dimk00z/go-shortener-praktikum/internal/util"
 )
 
-type RootHandler struct{}
+type RootHandler struct {
+	storage storage.UrlsStorage
+}
+
+func NewRootHandler() *RootHandler {
+	return &RootHandler{
+		storage: *storage.NewStorage(),
+	}
+}
 
 func (h RootHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	switch r.Method {
 	case "GET":
 		{
-
+			shortUrl := strings.Replace(r.URL.Path, "/", "", 1)
+			var err error
+			shortUrl, err = h.storage.GetByShortUrl(shortUrl)
+			fmt.Println(shortUrl, err)
+			if err != nil {
+				http.Error(w, err.Error(), http.StatusBadRequest)
+				return
+			} else {
+				w.Header().Set("Location", shortUrl)
+				w.WriteHeader(http.StatusTemporaryRedirect)
+				return
+			}
 		}
 	case "POST":
 		{
-
+			if r.Body == http.NoBody {
+				http.Error(w, "Request should have body", http.StatusBadRequest)
+				return
+			}
+			url := r.FormValue("url")
+			if url == "" {
+				http.Error(w, "Url field is required", http.StatusBadRequest)
+				return
+			} else if !util.IsUrl(url) {
+				http.Error(w, "Wrong url given", http.StatusBadRequest)
+				return
+			}
+			shortUrl := h.storage.SaveUrl(url)
+			w.Header().Add("Content-Type", "text/plain; charset=utf-8")
+			w.WriteHeader(http.StatusCreated)
+			w.Write([]byte(shortUrl))
 		}
 	}
-}
-
-type MyHandler struct {
-	Templ string
-}
-
-type Subj struct {
-	Product string `json:"name"`
-	Price   int    `json:"price"`
-}
-
-func (h MyHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-	h.Templ = "<h1>Hello, World</h1>"
-	fmt.Println(r.Header)
-	switch r.Method {
-	case "GET":
-		q := r.URL.Query().Get("query")
-		h.Templ = "GET:" + h.Templ
-		if q != "" {
-			h.Templ = h.Templ + q
-
-		}
-		// w.Write(h.Templ)
-		fmt.Fprintln(w, string(h.Templ))
-	case "POST":
-
-		w.Header().Set("content-type", "application/json")
-		// устанавливаем статус-код 200
-		w.WriteHeader(http.StatusOK)
-		// собираем данные
-		subj := Subj{"Milk", 50}
-		// кодируем JSON
-		resp, err := json.Marshal(subj)
-		if err != nil {
-			http.Error(w, err.Error(), 500)
-			return
-		}
-		// пишем тело ответа
-		w.Write(resp)
-
-	}
-}
-
-type TimeHandler struct {
-	Format string
-}
-
-func (th TimeHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-	tm := time.Now().Format(th.Format)
-	w.Write([]byte("The time is: " + tm))
-}
-
-type HameHandler struct {
-}
-
-func (nm HameHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-
-	name := strings.Replace(r.URL.Path, "/hello/", "", 1)
-
-	fmt.Fprintln(w, fmt.Sprintf("Hello %s", name))
-
 }
