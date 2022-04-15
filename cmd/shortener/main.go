@@ -3,6 +3,9 @@ package main
 import (
 	"log"
 	"net/http"
+	"os"
+	"os/signal"
+	"syscall"
 	"time"
 
 	"github.com/dimk00z/go-shortener-praktikum/internal/handlers"
@@ -25,10 +28,21 @@ func oldMain() {
 	log.Fatal(http.ListenAndServe(":8080", mux))
 }
 func main() {
-
+	interrupt := make(chan os.Signal, 1)
+	signal.Notify(interrupt, os.Interrupt, syscall.SIGTERM)
 	shortenerAddress := ":8080"
 	mux := http.NewServeMux()
-	rootHandler := handlers.RootHandler{}
+	rootHandler := handlers.NewRootHandler()
 	mux.Handle("/", rootHandler)
-	log.Fatal(http.ListenAndServe(shortenerAddress, mux))
+	go func() {
+		log.Fatal(http.ListenAndServe(shortenerAddress, mux))
+	}()
+	killSignal := <-interrupt
+	switch killSignal {
+	case os.Interrupt:
+		log.Print("Got SIGINT...")
+	case syscall.SIGTERM:
+		log.Print("Got SIGTERM...")
+	}
+	log.Print("Done")
 }
