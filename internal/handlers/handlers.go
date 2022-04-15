@@ -8,6 +8,21 @@ import (
 	"time"
 )
 
+type RootHandler struct{}
+
+func (h RootHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+	switch r.Method {
+	case "GET":
+		{
+
+		}
+	case "POST":
+		{
+
+		}
+	}
+}
+
 type MyHandler struct {
 	Templ string
 }
@@ -62,6 +77,7 @@ type HameHandler struct {
 }
 
 func (nm HameHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+
 	name := strings.Replace(r.URL.Path, "/hello/", "", 1)
 
 	fmt.Fprintln(w, fmt.Sprintf("Hello %s", name))

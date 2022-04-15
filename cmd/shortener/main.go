@@ -8,7 +8,7 @@ import (
 	"github.com/dimk00z/go-shortener-praktikum/internal/handlers"
 )
 
-func main() {
+func oldMain() {
 	handler1 := handlers.MyHandler{
 		// Templ: []byte("Hola, Mundo"),
 	}
@@ -23,4 +23,12 @@ func main() {
 	mux.Handle("/time", th)
 	mux.Handle("/ya", http.RedirectHandler("https://ya.ru/", 301))
 	log.Fatal(http.ListenAndServe(":8080", mux))
+}
+func main() {
+
+	shortenerAddress := ":8080"
+	mux := http.NewServeMux()
+	rootHandler := handlers.RootHandler{}
+	mux.Handle("/", rootHandler)
+	log.Fatal(http.ListenAndServe(shortenerAddress, mux))
 }
