@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"fmt"
 	"io/ioutil"
 	"log"
 	"net/http"
@@ -12,11 +13,13 @@ import (
 
 type RootHandler struct {
 	storage storage.URLsStorage
+	host    string
 }
 
-func NewRootHandler() *RootHandler {
+func NewRootHandler(host string) *RootHandler {
 	return &RootHandler{
 		storage: *storage.NewStorage(),
+		host:    host,
 	}
 }
 
@@ -58,7 +61,8 @@ func (h RootHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 			w.Header().Add("Content-Type", "text/plain; charset=utf-8")
 			w.WriteHeader(http.StatusCreated)
-			w.Write([]byte(shortURL))
+			w.Write([]byte(fmt.Sprintf("%s/%s", h.host, shortURL)))
+
 		}
 	}
 }

@@ -13,12 +13,13 @@ import (
 func main() {
 	interrupt := make(chan os.Signal, 1)
 	signal.Notify(interrupt, os.Interrupt, syscall.SIGTERM)
-	shortenerAddress := ":8080"
+	shortenerPort := ":8080"
+	host := "http://localhost" + shortenerPort
 	mux := http.NewServeMux()
-	rootHandler := handlers.NewRootHandler()
+	rootHandler := handlers.NewRootHandler(host)
 	mux.Handle("/", rootHandler)
 	go func() {
-		log.Fatal(http.ListenAndServe(shortenerAddress, mux))
+		log.Fatal(http.ListenAndServe(shortenerPort, mux))
 	}()
 	killSignal := <-interrupt
 	switch killSignal {
