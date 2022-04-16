@@ -1,7 +1,7 @@
 package handlers
 
 import (
-	"fmt"
+	"log"
 	"net/http"
 	"strings"
 
@@ -26,8 +26,8 @@ func (h RootHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 			shortUrl := strings.Replace(r.URL.Path, "/", "", 1)
 			var err error
 			shortUrl, err = h.storage.GetByShortUrl(shortUrl)
-			fmt.Println(shortUrl, err)
 			if err != nil {
+				log.Println(shortUrl, err)
 				http.Error(w, err.Error(), http.StatusBadRequest)
 				return
 			} else {
