@@ -22,7 +22,7 @@ func NewStorage() *UrlsStorage {
 	}
 }
 
-func (st UrlsStorage) SaveUrl(url string) (shortURL string) {
+func (st UrlsStorage) SaveURL(url string) (shortURL string) {
 
 	shortURL = util.GetMD5Hash(url, 4)
 	st.shortURLs[shortURL] = webResourse{

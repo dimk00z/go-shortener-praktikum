@@ -54,7 +54,7 @@ func (h RootHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 				http.Error(w, "Wrong url given", http.StatusBadRequest)
 				return
 			}
-			shortURL := h.storage.SaveUrl(url)
+			shortURL := h.storage.SaveURL(url)
 
 			w.Header().Add("Content-Type", "text/plain; charset=utf-8")
 			w.WriteHeader(http.StatusCreated)
