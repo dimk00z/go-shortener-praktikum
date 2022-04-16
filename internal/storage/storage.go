@@ -13,32 +13,32 @@ type webResourse struct {
 }
 
 type UrlsStorage struct {
-	shortUrls map[string]webResourse
+	shortURLs map[string]webResourse
 }
 
 func NewStorage() *UrlsStorage {
 	return &UrlsStorage{
-		shortUrls: make(map[string]webResourse),
+		shortURLs: make(map[string]webResourse),
 	}
 }
 
-func (st UrlsStorage) SaveUrl(url string) (shortUrl string) {
+func (st UrlsStorage) SaveUrl(url string) (shortURL string) {
 
-	shortUrl = util.GetMD5Hash(url, 4)
-	st.shortUrls[shortUrl] = webResourse{
+	shortURL = util.GetMD5Hash(url, 4)
+	st.shortURLs[shortURL] = webResourse{
 		url:     url,
 		counter: 0}
-	log.Println(st.shortUrls[shortUrl])
+	log.Println(st.shortURLs[shortURL])
 	return
 }
 
 func (st UrlsStorage) GetByShortUrl(requiredUrl string) (shortUrl string, err error) {
-	webResourse, ok := st.shortUrls[requiredUrl]
+	webResourse, ok := st.shortURLs[requiredUrl]
 	if ok {
 		webResourse.counter += 1
-		st.shortUrls[requiredUrl] = webResourse
+		st.shortURLs[requiredUrl] = webResourse
 
-		log.Println(st.shortUrls[requiredUrl])
+		log.Println(st.shortURLs[requiredUrl])
 
 		return webResourse.url, nil
 	} else {
