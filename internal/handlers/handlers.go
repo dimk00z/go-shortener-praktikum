@@ -11,7 +11,7 @@ import (
 )
 
 type RootHandler struct {
-	storage storage.UrlsStorage
+	storage storage.URLsStorage
 }
 
 func NewRootHandler() *RootHandler {
@@ -24,15 +24,15 @@ func (h RootHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	switch r.Method {
 	case "GET":
 		{
-			shortUrl := strings.Replace(r.URL.Path, "/", "", 1)
+			shortURL := strings.Replace(r.URL.Path, "/", "", 1)
 			var err error
-			shortUrl, err = h.storage.GetByShortUrl(shortUrl)
+			shortURL, err = h.storage.GetByShortURL(shortURL)
 			if err != nil {
-				log.Println(shortUrl, err)
+				log.Println(shortURL, err)
 				http.Error(w, err.Error(), http.StatusNotFound)
 				return
 			} else {
-				w.Header().Set("Location", shortUrl)
+				w.Header().Set("Location", shortURL)
 				w.WriteHeader(http.StatusTemporaryRedirect)
 				return
 			}
@@ -49,12 +49,12 @@ func (h RootHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 				http.Error(w, err.Error(), http.StatusBadRequest)
 				return
 			}
-			url := string(body)
-			if !util.IsUrl(url) {
-				http.Error(w, "Wrong url given", http.StatusBadRequest)
+			URL := string(body)
+			if !util.IsURL(URL) {
+				http.Error(w, "Wrong URL given", http.StatusBadRequest)
 				return
 			}
-			shortURL := h.storage.SaveURL(url)
+			shortURL := h.storage.SaveURL(URL)
 
 			w.Header().Add("Content-Type", "text/plain; charset=utf-8")
 			w.WriteHeader(http.StatusCreated)
