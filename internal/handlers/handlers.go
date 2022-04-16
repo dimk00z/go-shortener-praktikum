@@ -28,7 +28,7 @@ func (h RootHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 			shortUrl, err = h.storage.GetByShortUrl(shortUrl)
 			if err != nil {
 				log.Println(shortUrl, err)
-				http.Error(w, err.Error(), http.StatusBadRequest)
+				http.Error(w, err.Error(), http.StatusNotFound)
 				return
 			} else {
 				w.Header().Set("Location", shortUrl)

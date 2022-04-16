@@ -26,6 +26,8 @@ func main() {
 		log.Print("Got SIGINT...")
 	case syscall.SIGTERM:
 		log.Print("Got SIGTERM...")
+	case syscall.SIGQUIT:
+		log.Print("Got SIGQUIT...")
 	}
 	log.Print("Done")
 }
