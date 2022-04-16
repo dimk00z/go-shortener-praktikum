@@ -1,6 +1,8 @@
 package handlers
 
 import (
+	"fmt"
+	"io/ioutil"
 	"log"
 	"net/http"
 	"strings"
@@ -10,12 +12,14 @@ import (
 )
 
 type RootHandler struct {
-	storage storage.UrlsStorage
+	storage storage.URLsStorage
+	host    string
 }
 
-func NewRootHandler() *RootHandler {
+func NewRootHandler(host string) *RootHandler {
 	return &RootHandler{
 		storage: *storage.NewStorage(),
+		host:    host,
 	}
 }
 
@@ -23,15 +27,15 @@ func (h RootHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	switch r.Method {
 	case "GET":
 		{
-			shortUrl := strings.Replace(r.URL.Path, "/", "", 1)
+			shortURL := strings.Replace(r.URL.Path, "/", "", 1)
 			var err error
-			shortUrl, err = h.storage.GetByShortUrl(shortUrl)
+			shortURL, err = h.storage.GetByShortURL(shortURL)
 			if err != nil {
-				log.Println(shortUrl, err)
+				log.Println(shortURL, err)
 				http.Error(w, err.Error(), http.StatusNotFound)
 				return
 			} else {
-				w.Header().Set("Location", shortUrl)
+				w.Header().Set("Location", shortURL)
 				w.WriteHeader(http.StatusTemporaryRedirect)
 				return
 			}
@@ -42,18 +46,23 @@ func (h RootHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 				http.Error(w, "Request should have body", http.StatusBadRequest)
 				return
 			}
-			url := r.FormValue("url")
-			if url == "" {
-				http.Error(w, "Url field is required", http.StatusBadRequest)
-				return
-			} else if !util.IsUrl(url) {
-				http.Error(w, "Wrong url given", http.StatusBadRequest)
+
+			body, err := ioutil.ReadAll(r.Body)
+			if err != nil {
+				http.Error(w, err.Error(), http.StatusBadRequest)
 				return
 			}
-			shortUrl := h.storage.SaveUrl(url)
+			URL := string(body)
+			if !util.IsURL(URL) {
+				http.Error(w, "Wrong URL given", http.StatusBadRequest)
+				return
+			}
+			shortURL := h.storage.SaveURL(URL)
+
 			w.Header().Add("Content-Type", "text/plain; charset=utf-8")
 			w.WriteHeader(http.StatusCreated)
-			w.Write([]byte(shortUrl))
+			w.Write([]byte(fmt.Sprintf("%s/%s", h.host, shortURL)))
+
 		}
 	}
 }

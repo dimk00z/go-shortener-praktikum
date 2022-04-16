@@ -8,41 +8,42 @@ import (
 )
 
 type webResourse struct {
-	url     string
+	URL     string
 	counter int32
 }
 
-type UrlsStorage struct {
-	shortUrls map[string]webResourse
+type URLsStorage struct {
+	shortURLs map[string]webResourse
 }
 
-func NewStorage() *UrlsStorage {
-	return &UrlsStorage{
-		shortUrls: make(map[string]webResourse),
+func NewStorage() *URLsStorage {
+	return &URLsStorage{
+		shortURLs: make(map[string]webResourse),
 	}
 }
 
-func (st UrlsStorage) SaveUrl(url string) (shortUrl string) {
+func (st URLsStorage) SaveURL(URL string) (shortURL string) {
 
-	shortUrl = util.GetMD5Hash(url, 4)
-	st.shortUrls[shortUrl] = webResourse{
-		url:     url,
+	shortURL = util.GetMD5Hash(URL, 4)
+	st.shortURLs[shortURL] = webResourse{
+		URL:     URL,
 		counter: 0}
-	log.Println(st.shortUrls[shortUrl])
+	log.Println(st.shortURLs[shortURL])
 	return
+
 }
 
-func (st UrlsStorage) GetByShortUrl(requiredUrl string) (shortUrl string, err error) {
-	webResourse, ok := st.shortUrls[requiredUrl]
+func (st URLsStorage) GetByShortURL(requiredURL string) (shortURL string, err error) {
+	webResourse, ok := st.shortURLs[requiredURL]
 	if ok {
 		webResourse.counter += 1
-		st.shortUrls[requiredUrl] = webResourse
+		st.shortURLs[requiredURL] = webResourse
 
-		log.Println(st.shortUrls[requiredUrl])
+		log.Println(st.shortURLs[requiredURL])
 
-		return webResourse.url, nil
+		return webResourse.URL, nil
 	} else {
-		err = errors.New(requiredUrl + " does not exist")
+		err = errors.New(requiredURL + " does not exist")
 		return
 	}
 }
