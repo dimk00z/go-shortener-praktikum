@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"io/ioutil"
 	"log"
 	"net/http"
 	"strings"
@@ -42,15 +43,19 @@ func (h RootHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 				http.Error(w, "Request should have body", http.StatusBadRequest)
 				return
 			}
-			url := r.FormValue("url")
-			if url == "" {
-				http.Error(w, "Url field is required", http.StatusBadRequest)
+
+			body, err := ioutil.ReadAll(r.Body)
+			if err != nil {
+				http.Error(w, err.Error(), http.StatusBadRequest)
 				return
-			} else if !util.IsUrl(url) {
+			}
+			url := string(body)
+			if !util.IsUrl(url) {
 				http.Error(w, "Wrong url given", http.StatusBadRequest)
 				return
 			}
 			shortUrl := h.storage.SaveUrl(url)
+
 			w.Header().Add("Content-Type", "text/plain; charset=utf-8")
 			w.WriteHeader(http.StatusCreated)
 			w.Write([]byte(shortUrl))
