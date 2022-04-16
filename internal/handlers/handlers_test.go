@@ -24,22 +24,22 @@ func TestRootHandler_GetEndpoint(t *testing.T) {
 		want     want
 	}
 	tests := []test{}
-	test_index := 1
+	testIndex := 1
 	//add correct mock data
 	for shortURL, webResourse := range mockStorage.ShortURLs {
 		tests = append(tests, test{
-			name:     "simple test " + strconv.Itoa(test_index),
+			name:     "simple test " + strconv.Itoa(testIndex),
 			shortURL: shortURL,
 			want: want{
 				code:           http.StatusTemporaryRedirect,
 				locationHeader: webResourse.URL,
 			},
 		})
-		test_index += 1
+		testIndex += 1
 	}
 	// add wrong URL
 	tests = append(tests, test{
-		name:     "simple test " + strconv.Itoa(test_index+1),
+		name:     "simple test " + strconv.Itoa(testIndex+1),
 		shortURL: "WrongShortUrl",
 		want: want{
 			code:           http.StatusNotFound,
@@ -62,6 +62,7 @@ func TestRootHandler_GetEndpoint(t *testing.T) {
 
 			// check Location in header
 			assert.Equal(t, tt.want.locationHeader, res.Header.Get("Location"), "wrong answer code")
+			defer res.Body.Close()
 		})
 	}
 }
