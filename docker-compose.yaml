@@ -1,0 +1,19 @@
+version: "3.9"
+
+services:
+  shortener-api-server:
+    build:
+      dockerfile: Dockerfile
+      context: .
+    container_name: shortener-api-server
+    ports:
+      - "8080:8080"
+    environment:
+      - "SHORTENER_PORT=8080"
+    networks:
+      - shortener-net
+
+networks:
+  shortener-net:
+    name: shortener-net
+    driver: bridge
