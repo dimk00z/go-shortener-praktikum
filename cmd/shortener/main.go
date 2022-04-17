@@ -1,6 +1,8 @@
 package main
 
 import (
+	"context"
+
 	"github.com/dimk00z/go-shortener-praktikum/internal/handlers"
 	"github.com/dimk00z/go-shortener-praktikum/internal/server"
 	"github.com/dimk00z/go-shortener-praktikum/internal/settings"
@@ -13,5 +15,6 @@ func main() {
 	rootHandler := handlers.NewRootHandler(host)
 	server := server.NewServer(":" + shortenerPort)
 	server.MountHandlers(*rootHandler)
-	server.RunServer()
+	ctx, cancel := context.WithCancel(context.Background())
+	server.RunServer(ctx, cancel)
 }

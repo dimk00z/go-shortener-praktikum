@@ -1,6 +1,7 @@
 package server
 
 import (
+	"context"
 	"log"
 	"net/http"
 	"os"
@@ -40,21 +41,18 @@ func (s *ShortenerServer) MountHandlers(r Handler) {
 
 }
 
-func (s ShortenerServer) RunServer() {
+func (s ShortenerServer) RunServer(ctx context.Context, cancel context.CancelFunc) {
 	interrupt := make(chan os.Signal, 1)
 	signal.Notify(interrupt, os.Interrupt, syscall.SIGTERM)
 	go func() {
 		log.Println("Server started at " + s.port)
 		http.ListenAndServe(s.port, s.Router)
+		cancel()
 	}()
-	killSignal := <-interrupt
-	switch killSignal {
-	case os.Interrupt:
-		log.Print("Got SIGINT...")
-	case syscall.SIGTERM:
-		log.Print("Got SIGTERM...")
-	case syscall.SIGQUIT:
-		log.Print("Got SIGQUIT...")
+	select {
+	case killSignal := <-interrupt:
+		log.Print("Got ", killSignal)
+	case <-ctx.Done():
 	}
 	log.Print("Done")
 }
