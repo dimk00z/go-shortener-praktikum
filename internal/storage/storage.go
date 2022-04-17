@@ -28,7 +28,7 @@ func (st URLStorage) SaveURL(URL string) (shortURL string) {
 	st.ShortURLs[shortURL] = webResourse{
 		URL:     URL,
 		counter: 0}
-	log.Println(st.ShortURLs[shortURL])
+	log.Println(shortURL, st.ShortURLs[shortURL])
 	return
 
 }

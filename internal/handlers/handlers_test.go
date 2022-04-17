@@ -13,6 +13,11 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
+// func executeRequest(req *http.Request, s *server.ShortenerServer) *httptest.ResponseRecorder {
+// 	rr := httptest.NewRecorder()
+// 	s.Router.ServeHTTP(rr, req)
+// 	return rr
+// }
 func TestRootHandler_GetEndpoint(t *testing.T) {
 	shortenerPort := ":8080"
 	host := "http://localhost" + shortenerPort
@@ -60,7 +65,7 @@ func TestRootHandler_GetEndpoint(t *testing.T) {
 			h := NewRootHandler(host)
 			h.storage = mockStorage
 
-			h.ServeHTTP(w, request)
+			h.HandleGETRequest(w, request)
 			res := w.Result()
 			// check status code
 			assert.Equal(t, tt.want.code, res.StatusCode, "wrong answer code")
@@ -119,7 +124,7 @@ func TestRootHandler_PostEndpoint(t *testing.T) {
 
 			h := NewRootHandler(host)
 
-			h.ServeHTTP(w, request)
+			h.HandlePOSTRequest(w, request)
 			res := w.Result()
 			// check status code
 			resBody, err := io.ReadAll(res.Body)
