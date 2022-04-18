@@ -45,7 +45,10 @@ func (s ShortenerServer) RunServer(ctx context.Context, cancel context.CancelFun
 	signal.Notify(interrupt, os.Interrupt, syscall.SIGTERM)
 	go func() {
 		log.Println("Server started at " + s.port)
-		log.Fatal(http.ListenAndServe(s.port, s.Router))
+		err := http.ListenAndServe(s.port, s.Router)
+		if err != nil {
+			log.Println(err)
+		}
 		cancel()
 	}()
 	select {

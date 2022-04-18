@@ -10,10 +10,8 @@ import (
 
 func main() {
 	config := settings.LoadConfig()
-	shortenerPort := config.Server.Port
-	host := "http://localhost:" + shortenerPort
-	rootHandler := handlers.NewRootHandler(host)
-	server := server.NewServer(":" + shortenerPort)
+	rootHandler := handlers.NewRootHandler("http://" + config.Server.Host + ":" + config.Server.Port)
+	server := server.NewServer(":" + config.Server.Port)
 	server.MountHandlers(*rootHandler)
 	ctx, cancel := context.WithCancel(context.Background())
 	server.RunServer(ctx, cancel)
