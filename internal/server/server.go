@@ -33,7 +33,6 @@ func (s *ShortenerServer) MountHandlers(r Handler) {
 	s.Router.Use(middleware.RequestID)
 	s.Router.Use(middleware.Logger)
 	s.Router.Use(middleware.Recoverer)
-
 	// Mount all handlers here
 
 	s.Router.Post("/", r.HandlePOSTRequest)
@@ -46,7 +45,7 @@ func (s ShortenerServer) RunServer(ctx context.Context, cancel context.CancelFun
 	signal.Notify(interrupt, os.Interrupt, syscall.SIGTERM)
 	go func() {
 		log.Println("Server started at " + s.port)
-		http.ListenAndServe(s.port, s.Router)
+		log.Fatal(http.ListenAndServe(s.port, s.Router))
 		cancel()
 	}()
 	select {

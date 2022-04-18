@@ -59,5 +59,8 @@ func (h RootHandler) HandlePOSTRequest(w http.ResponseWriter, r *http.Request) {
 
 	w.Header().Add("Content-Type", "text/plain; charset=utf-8")
 	w.WriteHeader(http.StatusCreated)
-	w.Write([]byte(fmt.Sprintf("%s/%s", h.host, shortURL)))
+	_, err = w.Write([]byte(fmt.Sprintf("%s/%s", h.host, shortURL)))
+	if err != nil {
+		log.Fatal(err)
+	}
 }
