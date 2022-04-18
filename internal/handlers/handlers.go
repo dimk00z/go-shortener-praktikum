@@ -25,6 +25,7 @@ func NewRootHandler(host string) *RootHandler {
 
 func (h RootHandler) HandleGETRequest(w http.ResponseWriter, r *http.Request) {
 	shortURL := strings.Replace(r.URL.Path, "/", "", 1)
+	log.Println("Get " + shortURL + " shortURL")
 	var err error
 	shortURL, err = h.storage.GetByShortURL(shortURL)
 	if err != nil {
@@ -58,14 +59,8 @@ func (h RootHandler) HandlePOSTRequest(w http.ResponseWriter, r *http.Request) {
 
 	w.Header().Add("Content-Type", "text/plain; charset=utf-8")
 	w.WriteHeader(http.StatusCreated)
-	w.Write([]byte(fmt.Sprintf("%s/%s", h.host, shortURL)))
-}
-
-func (h RootHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-	switch r.Method {
-	case "GET":
-		h.HandleGETRequest(w, r)
-	case "POST":
-		h.HandlePOSTRequest(w, r)
+	_, err = w.Write([]byte(fmt.Sprintf("%s/%s", h.host, shortURL)))
+	if err != nil {
+		log.Fatal(err)
 	}
 }
