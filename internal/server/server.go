@@ -28,15 +28,16 @@ func NewServer(port string) *ShortenerServer {
 		Router: chi.NewRouter(),
 	}
 }
-func (s *ShortenerServer) MountHandlers(r Handler) {
+func (s *ShortenerServer) MountHandlers(h Handler) {
 	// Mount all Middleware here
 	s.Router.Use(middleware.RequestID)
 	s.Router.Use(middleware.Logger)
 	s.Router.Use(middleware.Recoverer)
 	// Mount all handlers here
-
-	s.Router.Post("/", r.HandlePOSTRequest)
-	s.Router.Get("/{shortURL}", r.HandleGETRequest)
+	s.Router.Route("/", func(r chi.Router) {
+		s.Router.Post("/", h.HandlePOSTRequest)
+		s.Router.Get("/{shortURL}", h.HandleGETRequest)
+	})
 
 }
 

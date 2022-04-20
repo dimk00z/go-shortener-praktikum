@@ -5,10 +5,10 @@ import (
 	"io/ioutil"
 	"log"
 	"net/http"
-	"strings"
 
 	"github.com/dimk00z/go-shortener-praktikum/internal/storage"
 	"github.com/dimk00z/go-shortener-praktikum/internal/util"
+	"github.com/go-chi/chi"
 )
 
 type RootHandler struct {
@@ -24,7 +24,7 @@ func NewRootHandler(host string) *RootHandler {
 }
 
 func (h RootHandler) HandleGETRequest(w http.ResponseWriter, r *http.Request) {
-	shortURL := strings.Replace(r.URL.Path, "/", "", 1)
+	shortURL := chi.URLParam(r, "shortURL")
 	log.Println("Get " + shortURL + " shortURL")
 	var err error
 	shortURL, err = h.storage.GetByShortURL(shortURL)

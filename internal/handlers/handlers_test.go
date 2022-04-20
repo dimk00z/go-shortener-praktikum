@@ -9,15 +9,17 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/dimk00z/go-shortener-praktikum/internal/server"
 	"github.com/dimk00z/go-shortener-praktikum/internal/storage"
 	"github.com/stretchr/testify/assert"
 )
 
-// func executeRequest(req *http.Request, s *server.ShortenerServer) *httptest.ResponseRecorder {
-// 	rr := httptest.NewRecorder()
-// 	s.Router.ServeHTTP(rr, req)
-// 	return rr
-// }
+func executeRequest(req *http.Request, s *server.ShortenerServer) *httptest.ResponseRecorder {
+	rr := httptest.NewRecorder()
+	s.Router.ServeHTTP(rr, req)
+
+	return rr
+}
 func TestRootHandler_GetEndpoint(t *testing.T) {
 	shortenerPort := ":8080"
 	host := "http://localhost" + shortenerPort
@@ -56,23 +58,20 @@ func TestRootHandler_GetEndpoint(t *testing.T) {
 			locationHeader: "",
 		},
 	})
-
+	h := NewRootHandler(host)
+	h.storage = mockStorage
+	server := server.NewServer(
+		shortenerPort)
+	server.MountHandlers(h)
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			request := httptest.NewRequest(http.MethodGet, "/"+tt.shortURL, nil)
-			w := httptest.NewRecorder()
-
-			h := NewRootHandler(host)
-			h.storage = mockStorage
-
-			h.HandleGETRequest(w, request)
-			res := w.Result()
+			response := executeRequest(request, server)
 			// check status code
-			assert.Equal(t, tt.want.code, res.StatusCode, "wrong answer code")
+			assert.Equal(t, tt.want.code, response.Code, "wrong answer code")
 
 			// check Location in header
-			assert.Equal(t, tt.want.locationHeader, res.Header.Get("Location"), "wrong answer code")
-			defer res.Body.Close()
+			assert.Equal(t, tt.want.locationHeader, response.HeaderMap.Get("Location"), "wrong answer code")
 		})
 	}
 }
