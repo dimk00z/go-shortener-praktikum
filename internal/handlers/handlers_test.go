@@ -71,7 +71,7 @@ func TestRootHandler_GetEndpoint(t *testing.T) {
 			assert.Equal(t, tt.want.code, response.Code, "wrong answer code")
 
 			// check Location in header
-			assert.Equal(t, tt.want.locationHeader, response.HeaderMap.Get("Location"), "wrong answer code")
+			assert.Equal(t, tt.want.locationHeader, response.Result().Header.Get("Location"), "wrong answer code")
 		})
 	}
 }
