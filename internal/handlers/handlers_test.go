@@ -14,11 +14,11 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func executeRequest(req *http.Request, s *server.ShortenerServer) *httptest.ResponseRecorder {
+func executeRequest(req *http.Request, s *server.ShortenerServer) *http.Response {
 	rr := httptest.NewRecorder()
 	s.Router.ServeHTTP(rr, req)
 
-	return rr
+	return rr.Result()
 }
 func TestRootHandler_GetEndpoint(t *testing.T) {
 	shortenerPort := ":8080"
@@ -68,10 +68,11 @@ func TestRootHandler_GetEndpoint(t *testing.T) {
 			request := httptest.NewRequest(http.MethodGet, "/"+tt.shortURL, nil)
 			response := executeRequest(request, server)
 			// check status code
-			assert.Equal(t, tt.want.code, response.Code, "wrong answer code")
+			assert.Equal(t, tt.want.code, response.StatusCode, "wrong answer code")
 
 			// check Location in header
-			assert.Equal(t, tt.want.locationHeader, response.Result().Header.Get("Location"), "wrong answer code")
+			assert.Equal(t, tt.want.locationHeader, response.Header.Get("Location"), "wrong answer code")
+			defer response.Body.Close()
 		})
 	}
 }
@@ -115,28 +116,28 @@ func TestRootHandler_PostEndpoint(t *testing.T) {
 			contentType: "text/plain; charset=utf-8",
 		},
 	})
+	h := NewRootHandler(host)
+	h.storage = mockStorage
+	server := server.NewServer(
+		shortenerPort)
+	server.MountHandlers(h)
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			body := strings.NewReader(tt.URL)
 			request := httptest.NewRequest(http.MethodPost, "/", body)
-			w := httptest.NewRecorder()
-
-			h := NewRootHandler(host)
-
-			h.HandlePOSTRequest(w, request)
-			res := w.Result()
+			response := executeRequest(request, server)
 			// check status code
-			resBody, err := io.ReadAll(res.Body)
+			resBody, err := io.ReadAll(response.Body)
 			if err != nil {
 				t.Fatal(err)
 			}
-			assert.Equal(t, tt.want.code, res.StatusCode, "wrong answer code")
+			assert.Equal(t, tt.want.code, response.StatusCode, "wrong answer code")
 
 			assert.Equal(t, tt.want.result, string(resBody), "wrong result")
 
-			assert.Equal(t, tt.want.contentType, res.Header.Get("Content-Type"), "wrong content-type")
+			assert.Equal(t, tt.want.contentType, response.Header.Get("Content-Type"), "wrong content-type")
 
-			defer res.Body.Close()
+			defer response.Body.Close()
 
 		})
 	}
