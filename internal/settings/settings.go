@@ -7,8 +7,8 @@ import (
 )
 
 type ServerConfig struct {
-	Port string `env:"SERVER_ADDRESS" envDefault:"8080"`
-	Host string `env:"BASE_URL" envDefault:"localhost"`
+	Port string `env:"SERVER_ADDRESS" envDefault:":8080"`
+	Host string `env:"BASE_URL" envDefault:"http://localhost:8080"`
 }
 type Config struct {
 	Server ServerConfig

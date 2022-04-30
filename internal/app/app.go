@@ -10,8 +10,10 @@ import (
 
 func StartApp() {
 	config := settings.LoadConfig()
-	host := "http://" + config.Server.Host + ":" + config.Server.Port
-	server := server.NewServer(":" + config.Server.Port)
+	// host := "http://" + config.Server.Host + ":" + config.Server.Port
+	host := config.Server.Host
+	// server := server.NewServer(":" + config.Server.Port)
+	server := server.NewServer(config.Server.Port)
 	server.MountHandlers(host, storage.GetStorage)
 	ctx, cancel := context.WithCancel(context.Background())
 	server.RunServer(ctx, cancel)
