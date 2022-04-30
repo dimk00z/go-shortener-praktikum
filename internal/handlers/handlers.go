@@ -12,13 +12,15 @@ import (
 )
 
 type RootHandler struct {
-	storage storage.URLStorage
+	storage *storage.URLStorage
 	host    string
 }
 
-func NewRootHandler(host string) *RootHandler {
+func NewRootHandler(host string, getStorage func() (*storage.URLStorage, error)) *RootHandler {
+	st, _ := getStorage()
 	return &RootHandler{
-		storage: *storage.NewStorage(),
+		// storage: *storage.NewStorage(),
+		storage: st,
 		host:    host,
 	}
 }

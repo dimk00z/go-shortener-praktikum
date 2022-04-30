@@ -23,7 +23,7 @@ func executeRequest(req *http.Request, s *server.ShortenerServer) *http.Response
 func TestRootHandler_GetEndpoint(t *testing.T) {
 	shortenerPort := ":8080"
 	host := "http://localhost" + shortenerPort
-	mockStorage := *storage.GenMockData()
+	mockStorage, _ := storage.GenMockStorage()
 	type want struct {
 		code           int
 		locationHeader string
@@ -58,7 +58,7 @@ func TestRootHandler_GetEndpoint(t *testing.T) {
 			locationHeader: "",
 		},
 	})
-	h := NewRootHandler(host)
+	h := NewRootHandler(host, storage.GenMockStorage)
 	h.storage = mockStorage
 	server := server.NewServer(
 		shortenerPort)
@@ -93,7 +93,7 @@ func TestRootHandler_PostEndpoint(t *testing.T) {
 	tests := []test{}
 	testIndex := 1
 	nameTest := "PostEndpoint test "
-	mockStorage := *storage.GenMockData()
+	mockStorage, _ := storage.GenMockStorage()
 
 	for shortURL, webResourse := range mockStorage.ShortURLs {
 		tests = append(tests, test{
@@ -116,7 +116,7 @@ func TestRootHandler_PostEndpoint(t *testing.T) {
 			contentType: "text/plain; charset=utf-8",
 		},
 	})
-	h := NewRootHandler(host)
+	h := NewRootHandler(host, storage.GenMockStorage)
 	h.storage = mockStorage
 	server := server.NewServer(
 		shortenerPort)
