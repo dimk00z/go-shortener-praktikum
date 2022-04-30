@@ -8,6 +8,8 @@ import (
 	"os/signal"
 	"syscall"
 
+	"github.com/dimk00z/go-shortener-praktikum/internal/handlers"
+	"github.com/dimk00z/go-shortener-praktikum/internal/storage"
 	"github.com/go-chi/chi"
 	"github.com/go-chi/chi/middleware"
 )
@@ -28,17 +30,30 @@ func NewServer(port string) *ShortenerServer {
 		Router: chi.NewRouter(),
 	}
 }
-func (s *ShortenerServer) MountHandlers(h Handler) {
+func (s *ShortenerServer) MountHandlers(host string, getStorage func() (*storage.URLStorage, error)) {
 	// Mount all Middleware here
 	s.Router.Use(middleware.RequestID)
 	s.Router.Use(middleware.Logger)
 	s.Router.Use(middleware.Recoverer)
 	// Mount all handlers here
+	// Sprint 1
 	s.Router.Route("/", func(r chi.Router) {
-		s.Router.Post("/", h.HandlePOSTRequest)
-		s.Router.Get("/{shortURL}", h.HandleGETRequest)
-	})
+		h := handlers.NewRootHandler(host,
+			getStorage)
 
+		r.Post("/", h.HandlePOSTRequest)
+		r.Get("/{shortURL}", h.HandleGETRequest)
+	})
+	// Sprint 2
+	shortenerRouter := chi.NewRouter()
+	shortenerRouter.Route("/", func(r chi.Router) {
+		h := handlers.NewShortenerAPIHandler(host,
+			getStorage)
+		r.Post("/", h.SaveJSON)
+	})
+	apiRouter := chi.NewRouter()
+	apiRouter.Mount("/shorten", shortenerRouter)
+	s.Router.Mount("/api", apiRouter)
 }
 
 func (s ShortenerServer) RunServer(ctx context.Context, cancel context.CancelFunc) {

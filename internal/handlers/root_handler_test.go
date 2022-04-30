@@ -1,4 +1,4 @@
-package handlers
+package handlers_test
 
 import (
 	"fmt"
@@ -58,11 +58,10 @@ func TestRootHandler_GetEndpoint(t *testing.T) {
 			locationHeader: "",
 		},
 	})
-	h := NewRootHandler(host, storage.GenMockStorage)
-	h.storage = mockStorage
+
 	server := server.NewServer(
 		shortenerPort)
-	server.MountHandlers(h)
+	server.MountHandlers(host, storage.GenMockStorage)
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			request := httptest.NewRequest(http.MethodGet, "/"+tt.shortURL, nil)
@@ -116,11 +115,10 @@ func TestRootHandler_PostEndpoint(t *testing.T) {
 			contentType: "text/plain; charset=utf-8",
 		},
 	})
-	h := NewRootHandler(host, storage.GenMockStorage)
-	h.storage = mockStorage
+
 	server := server.NewServer(
 		shortenerPort)
-	server.MountHandlers(h)
+	server.MountHandlers(host, storage.GenMockStorage)
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			body := strings.NewReader(tt.URL)

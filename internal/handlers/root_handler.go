@@ -12,15 +12,14 @@ import (
 )
 
 type RootHandler struct {
-	storage *storage.URLStorage
+	Storage *storage.URLStorage
 	host    string
 }
 
 func NewRootHandler(host string, getStorage func() (*storage.URLStorage, error)) *RootHandler {
 	st, _ := getStorage()
 	return &RootHandler{
-		// storage: *storage.NewStorage(),
-		storage: st,
+		Storage: st,
 		host:    host,
 	}
 }
@@ -29,7 +28,7 @@ func (h RootHandler) HandleGETRequest(w http.ResponseWriter, r *http.Request) {
 	shortURL := chi.URLParam(r, "shortURL")
 	log.Println("Get " + shortURL + " shortURL")
 	var err error
-	shortURL, err = h.storage.GetByShortURL(shortURL)
+	shortURL, err = h.Storage.GetByShortURL(shortURL)
 	if err != nil {
 		log.Println(shortURL, err)
 		http.Error(w, err.Error(), http.StatusNotFound)
@@ -42,8 +41,8 @@ func (h RootHandler) HandleGETRequest(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h RootHandler) HandlePOSTRequest(w http.ResponseWriter, r *http.Request) {
-	if r.Body == http.NoBody {
-		http.Error(w, "Request should have body", http.StatusBadRequest)
+
+	if err := util.RequestBodyCheck(w, r); err != nil {
 		return
 	}
 
@@ -57,7 +56,7 @@ func (h RootHandler) HandlePOSTRequest(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Wrong URL given", http.StatusBadRequest)
 		return
 	}
-	shortURL := h.storage.SaveURL(URL)
+	shortURL := h.Storage.SaveURL(URL)
 
 	w.Header().Add("Content-Type", "text/plain; charset=utf-8")
 	w.WriteHeader(http.StatusCreated)
