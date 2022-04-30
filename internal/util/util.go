@@ -31,7 +31,7 @@ func GetEnv(key string, defaultVal string) string {
 
 func RequestBodyCheck(w http.ResponseWriter, r *http.Request) error {
 	if r.Body == http.NoBody {
-		err := errors.New("Request should have body")
+		err := errors.New("request should have body")
 		http.Error(w, string(err.Error()), http.StatusBadRequest)
 		return err
 	}
