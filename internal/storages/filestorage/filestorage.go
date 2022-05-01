@@ -30,10 +30,10 @@ func NewFileStorage(filename string) (st *FileStorage) {
 
 func (st *FileStorage) load() (err error) {
 	file, err := os.OpenFile(st.fileName, os.O_RDONLY|os.O_CREATE, 0777)
-	defer file.Close()
 	if err != nil {
 		log.Panicln(err)
 	}
+	defer file.Close()
 	loadedData := make(map[string]webResourse)
 	decoder := json.NewDecoder(file)
 	if err := decoder.Decode(&loadedData); err != nil {
@@ -81,11 +81,11 @@ func (st *FileStorage) GetByShortURL(requiredURL string) (shortURL string, err e
 }
 func (st *FileStorage) updateFile() error {
 	file, err := os.OpenFile(st.fileName, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0777)
-	defer file.Close()
 	if err != nil {
 		log.Println(err)
 		return err
 	}
+	defer file.Close()
 	encoder := json.NewEncoder(file)
 	encoder.SetEscapeHTML(false)
 	encoder.Encode(&st.ShortURLs)
