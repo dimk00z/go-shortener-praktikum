@@ -1,10 +1,10 @@
-package memory_storage
+package memorystorage
 
-import "github.com/dimk00z/go-shortener-praktikum/internal/storages/storage_interface"
+import "github.com/dimk00z/go-shortener-praktikum/internal/storages/storageinterface"
 
 var mockStorage *URLStorage
 
-func GenMockStorage() storage_interface.Storage {
+func GenMockStorage() storageinterface.Storage {
 	if mockStorage == nil {
 		mockStorage = NewStorage()
 		var mockURLs = []string{

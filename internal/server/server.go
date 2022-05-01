@@ -9,15 +9,15 @@ import (
 	"syscall"
 
 	"github.com/dimk00z/go-shortener-praktikum/internal/handlers"
-	"github.com/dimk00z/go-shortener-praktikum/internal/storages/storage_interface"
+	"github.com/dimk00z/go-shortener-praktikum/internal/storages/storageinterface"
 	"github.com/go-chi/chi"
 	"github.com/go-chi/chi/middleware"
 )
 
-type Handler interface {
-	HandlePOSTRequest(w http.ResponseWriter, r *http.Request)
-	HandleGETRequest(w http.ResponseWriter, r *http.Request)
-}
+// type Handler interface {
+// 	HandlePOSTRequest(w http.ResponseWriter, r *http.Request)
+// 	HandleGETRequest(w http.ResponseWriter, r *http.Request)
+// }
 
 type ShortenerServer struct {
 	port   string
@@ -30,7 +30,7 @@ func NewServer(port string) *ShortenerServer {
 		Router: chi.NewRouter(),
 	}
 }
-func (s *ShortenerServer) MountHandlers(host string, st storage_interface.Storage) {
+func (s *ShortenerServer) MountHandlers(host string, st storageinterface.Storage) {
 	// Mount all Middleware here
 	s.Router.Use(middleware.RequestID)
 	s.Router.Use(middleware.Logger)

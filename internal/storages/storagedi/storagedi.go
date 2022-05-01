@@ -2,21 +2,21 @@ package storagedi
 
 import (
 	"github.com/dimk00z/go-shortener-praktikum/internal/settings"
-	"github.com/dimk00z/go-shortener-praktikum/internal/storages/file_storage"
-	"github.com/dimk00z/go-shortener-praktikum/internal/storages/memory_storage"
-	"github.com/dimk00z/go-shortener-praktikum/internal/storages/storage_interface"
+	"github.com/dimk00z/go-shortener-praktikum/internal/storages/filestorage"
+	"github.com/dimk00z/go-shortener-praktikum/internal/storages/memorystorage"
+	"github.com/dimk00z/go-shortener-praktikum/internal/storages/storageinterface"
 )
 
-var st storage_interface.Storage
+var st storageinterface.Storage
 
-func GetStorage(storageConfig settings.StorageConfig) storage_interface.Storage {
+func GetStorage(storageConfig settings.StorageConfig) storageinterface.Storage {
 	if st != nil {
 		return st
 	}
 	if storageConfig.FileStorage.FilePath != "" {
-		st = file_storage.NewFileStorage(settings.LoadConfig().Storage.FileStorage.FilePath)
+		st = filestorage.NewFileStorage(settings.LoadConfig().Storage.FileStorage.FilePath)
 	} else {
-		st = memory_storage.NewStorage()
+		st = memorystorage.NewStorage()
 	}
 	return st
 }

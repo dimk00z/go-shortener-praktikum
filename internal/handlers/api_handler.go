@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"net/http"
 
-	"github.com/dimk00z/go-shortener-praktikum/internal/storages/storage_interface"
+	"github.com/dimk00z/go-shortener-praktikum/internal/storages/storageinterface"
 	"github.com/dimk00z/go-shortener-praktikum/internal/util"
 )
 
@@ -14,11 +14,11 @@ type URLRequest struct {
 }
 
 type ShortenerAPIHandler struct {
-	Storage storage_interface.Storage
+	Storage storageinterface.Storage
 	host    string
 }
 
-func NewShortenerAPIHandler(host string, st storage_interface.Storage) *ShortenerAPIHandler {
+func NewShortenerAPIHandler(host string, st storageinterface.Storage) *ShortenerAPIHandler {
 	return &ShortenerAPIHandler{
 		Storage: st,
 		host:    host,

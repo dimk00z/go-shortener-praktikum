@@ -11,7 +11,7 @@ import (
 	"testing"
 
 	"github.com/dimk00z/go-shortener-praktikum/internal/server"
-	"github.com/dimk00z/go-shortener-praktikum/internal/storages/memory_storage"
+	"github.com/dimk00z/go-shortener-praktikum/internal/storages/memorystorage"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -25,7 +25,7 @@ func executeRequest(req *http.Request, s *server.ShortenerServer) *http.Response
 func TestRootHandler_GetEndpoint(t *testing.T) {
 	shortenerPort := ":8080"
 	host := "http://localhost" + shortenerPort
-	mockStorage := memory_storage.GenMockStorage()
+	mockStorage := memorystorage.GenMockStorage()
 	type want struct {
 		code           int
 		locationHeader string
@@ -38,7 +38,7 @@ func TestRootHandler_GetEndpoint(t *testing.T) {
 	tests := []test{}
 	testIndex := 1
 	nameTest := "GetEndpoint test "
-	rStorage := reflect.ValueOf(mockStorage).Interface().(*memory_storage.URLStorage)
+	rStorage := reflect.ValueOf(mockStorage).Interface().(*memorystorage.URLStorage)
 	//add correct mock data
 	for shortURL, webResourse := range rStorage.ShortURLs {
 		tests = append(tests, test{
@@ -94,8 +94,8 @@ func TestRootHandler_PostEndpoint(t *testing.T) {
 	tests := []test{}
 	testIndex := 1
 	nameTest := "PostEndpoint test "
-	mockStorage := memory_storage.GenMockStorage()
-	rStorage := reflect.ValueOf(mockStorage).Interface().(*memory_storage.URLStorage)
+	mockStorage := memorystorage.GenMockStorage()
+	rStorage := reflect.ValueOf(mockStorage).Interface().(*memorystorage.URLStorage)
 	for shortURL, webResourse := range rStorage.ShortURLs {
 		tests = append(tests, test{
 			name: nameTest + strconv.Itoa(testIndex),

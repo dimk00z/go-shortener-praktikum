@@ -6,17 +6,17 @@ import (
 	"log"
 	"net/http"
 
-	"github.com/dimk00z/go-shortener-praktikum/internal/storages/storage_interface"
+	"github.com/dimk00z/go-shortener-praktikum/internal/storages/storageinterface"
 	"github.com/dimk00z/go-shortener-praktikum/internal/util"
 	"github.com/go-chi/chi"
 )
 
 type RootHandler struct {
-	Storage storage_interface.Storage
+	Storage storageinterface.Storage
 	host    string
 }
 
-func NewRootHandler(host string, st storage_interface.Storage) *RootHandler {
+func NewRootHandler(host string, st storageinterface.Storage) *RootHandler {
 	return &RootHandler{
 		Storage: st,
 		host:    host,

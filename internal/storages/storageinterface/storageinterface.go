@@ -1,4 +1,4 @@
-package storage_interface
+package storageinterface
 
 type Storage interface {
 	SaveURL(URL string) (shortURL string)
