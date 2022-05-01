@@ -49,14 +49,19 @@ func (st *FileStorage) load() (err error) {
 func (st *FileStorage) SaveURL(URL string) (shortURL string) {
 
 	shortURL = util.GetMD5Hash(URL)
-	// if st.GetByShortURL(url)
+	if _, ok := st.ShortURLs[shortURL]; ok {
+		return shortURL
+	}
 	wb := webResourse{
 		URL:     URL,
 		Counter: 0,
 	}
 	st.ShortURLs[shortURL] = wb
 	log.Println(shortURL, st.ShortURLs[shortURL])
-
+	err := st.updateFile()
+	if err != nil {
+		log.Println(err)
+	}
 	return shortURL
 
 }
@@ -74,7 +79,7 @@ func (st *FileStorage) GetByShortURL(requiredURL string) (shortURL string, err e
 		return
 	}
 }
-func (st *FileStorage) Close() error {
+func (st *FileStorage) updateFile() error {
 	file, err := os.OpenFile(st.fileName, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0777)
 	defer file.Close()
 	if err != nil {
@@ -84,7 +89,11 @@ func (st *FileStorage) Close() error {
 	encoder := json.NewEncoder(file)
 	encoder.SetEscapeHTML(false)
 	encoder.Encode(&st.ShortURLs)
+	return nil
+}
+func (st *FileStorage) Close() (err error) {
+	err = st.updateFile()
 	log.Println("Filestorage closed correctly")
 
-	return nil
+	return err
 }
