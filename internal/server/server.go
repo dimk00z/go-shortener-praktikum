@@ -9,7 +9,7 @@ import (
 	"syscall"
 
 	"github.com/dimk00z/go-shortener-praktikum/internal/handlers"
-	"github.com/dimk00z/go-shortener-praktikum/internal/storage"
+	"github.com/dimk00z/go-shortener-praktikum/internal/storages/storage_interface"
 	"github.com/go-chi/chi"
 	"github.com/go-chi/chi/middleware"
 )
@@ -30,7 +30,7 @@ func NewServer(port string) *ShortenerServer {
 		Router: chi.NewRouter(),
 	}
 }
-func (s *ShortenerServer) MountHandlers(host string, getStorage func() (*storage.URLStorage, error)) {
+func (s *ShortenerServer) MountHandlers(host string, st storage_interface.Storage) {
 	// Mount all Middleware here
 	s.Router.Use(middleware.RequestID)
 	s.Router.Use(middleware.Logger)
@@ -39,7 +39,7 @@ func (s *ShortenerServer) MountHandlers(host string, getStorage func() (*storage
 	// Sprint 1
 	s.Router.Route("/", func(r chi.Router) {
 		h := handlers.NewRootHandler(host,
-			getStorage)
+			st)
 
 		r.Post("/", h.HandlePOSTRequest)
 		r.Get("/{shortURL}", h.HandleGETRequest)
@@ -48,7 +48,7 @@ func (s *ShortenerServer) MountHandlers(host string, getStorage func() (*storage
 	shortenerRouter := chi.NewRouter()
 	shortenerRouter.Route("/", func(r chi.Router) {
 		h := handlers.NewShortenerAPIHandler(host,
-			getStorage)
+			st)
 		r.Post("/", h.SaveJSON)
 	})
 	apiRouter := chi.NewRouter()

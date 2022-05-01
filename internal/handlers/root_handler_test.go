@@ -5,12 +5,13 @@ import (
 	"io"
 	"net/http"
 	"net/http/httptest"
+	"reflect"
 	"strconv"
 	"strings"
 	"testing"
 
 	"github.com/dimk00z/go-shortener-praktikum/internal/server"
-	"github.com/dimk00z/go-shortener-praktikum/internal/storage"
+	"github.com/dimk00z/go-shortener-praktikum/internal/storages/memory_storage"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -20,10 +21,11 @@ func executeRequest(req *http.Request, s *server.ShortenerServer) *http.Response
 
 	return rr.Result()
 }
+
 func TestRootHandler_GetEndpoint(t *testing.T) {
 	shortenerPort := ":8080"
 	host := "http://localhost" + shortenerPort
-	mockStorage, _ := storage.GenMockStorage()
+	mockStorage := memory_storage.GenMockStorage()
 	type want struct {
 		code           int
 		locationHeader string
@@ -36,9 +38,9 @@ func TestRootHandler_GetEndpoint(t *testing.T) {
 	tests := []test{}
 	testIndex := 1
 	nameTest := "GetEndpoint test "
-
+	rStorage := reflect.ValueOf(mockStorage).Interface().(*memory_storage.URLStorage)
 	//add correct mock data
-	for shortURL, webResourse := range mockStorage.ShortURLs {
+	for shortURL, webResourse := range rStorage.ShortURLs {
 		tests = append(tests, test{
 			name:     nameTest + strconv.Itoa(testIndex),
 			shortURL: shortURL,
@@ -61,7 +63,7 @@ func TestRootHandler_GetEndpoint(t *testing.T) {
 
 	server := server.NewServer(
 		shortenerPort)
-	server.MountHandlers(host, storage.GenMockStorage)
+	server.MountHandlers(host, mockStorage)
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			request := httptest.NewRequest(http.MethodGet, "/"+tt.shortURL, nil)
@@ -92,9 +94,9 @@ func TestRootHandler_PostEndpoint(t *testing.T) {
 	tests := []test{}
 	testIndex := 1
 	nameTest := "PostEndpoint test "
-	mockStorage, _ := storage.GenMockStorage()
-
-	for shortURL, webResourse := range mockStorage.ShortURLs {
+	mockStorage := memory_storage.GenMockStorage()
+	rStorage := reflect.ValueOf(mockStorage).Interface().(*memory_storage.URLStorage)
+	for shortURL, webResourse := range rStorage.ShortURLs {
 		tests = append(tests, test{
 			name: nameTest + strconv.Itoa(testIndex),
 			URL:  webResourse.URL,
@@ -118,7 +120,7 @@ func TestRootHandler_PostEndpoint(t *testing.T) {
 
 	server := server.NewServer(
 		shortenerPort)
-	server.MountHandlers(host, storage.GenMockStorage)
+	server.MountHandlers(host, mockStorage)
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			body := strings.NewReader(tt.URL)

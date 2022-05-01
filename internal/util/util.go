@@ -10,14 +10,16 @@ import (
 	"net/url"
 )
 
+const hashLen = 4
+
 func IsURL(str string) bool {
 	u, err := url.Parse(str)
 	return err == nil && u.Scheme != "" && u.Host != ""
 }
 
-func GetMD5Hash(text string, len int) string {
+func GetMD5Hash(text string) string {
 	hash := md5.Sum([]byte(text))
-	return hex.EncodeToString(hash[:len])
+	return hex.EncodeToString(hash[:hashLen])
 }
 
 func RequestBodyCheck(w http.ResponseWriter, r *http.Request) error {

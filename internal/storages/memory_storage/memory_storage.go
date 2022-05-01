@@ -1,4 +1,4 @@
-package storage
+package memory_storage
 
 import (
 	"errors"
@@ -22,9 +22,9 @@ func NewStorage() *URLStorage {
 	}
 }
 
-func (st URLStorage) SaveURL(URL string) (shortURL string) {
+func (st *URLStorage) SaveURL(URL string) (shortURL string) {
 
-	shortURL = util.GetMD5Hash(URL, 4)
+	shortURL = util.GetMD5Hash(URL)
 	st.ShortURLs[shortURL] = webResourse{
 		URL:     URL,
 		counter: 0}
@@ -33,7 +33,7 @@ func (st URLStorage) SaveURL(URL string) (shortURL string) {
 
 }
 
-func (st URLStorage) GetByShortURL(requiredURL string) (shortURL string, err error) {
+func (st *URLStorage) GetByShortURL(requiredURL string) (shortURL string, err error) {
 	webResourse, ok := st.ShortURLs[requiredURL]
 	if ok {
 		webResourse.counter += 1
@@ -46,4 +46,9 @@ func (st URLStorage) GetByShortURL(requiredURL string) (shortURL string, err err
 		err = errors.New(requiredURL + " does not exist")
 		return
 	}
+}
+
+func (st *URLStorage) Close() error {
+	log.Println("Memory storage closed")
+	return nil
 }

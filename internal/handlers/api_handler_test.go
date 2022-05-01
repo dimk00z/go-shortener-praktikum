@@ -5,12 +5,13 @@ import (
 	"io"
 	"net/http"
 	"net/http/httptest"
+	"reflect"
 	"strconv"
 	"strings"
 	"testing"
 
 	"github.com/dimk00z/go-shortener-praktikum/internal/server"
-	"github.com/dimk00z/go-shortener-praktikum/internal/storage"
+	"github.com/dimk00z/go-shortener-praktikum/internal/storages/memory_storage"
 	"github.com/dimk00z/go-shortener-praktikum/internal/util"
 	"github.com/stretchr/testify/assert"
 )
@@ -31,9 +32,11 @@ func TestShortenerAPIHandler_PostEndpoint(t *testing.T) {
 	tests := []test{}
 	testIndex := 1
 	nameTest := "PostEndpoint test "
-	mockStorage, _ := storage.GenMockStorage()
+	mockStorage := memory_storage.GenMockStorage()
 	contentType := "application/json; charset=utf-8"
-	for shortURL, webResourse := range mockStorage.ShortURLs {
+
+	rStorage := reflect.ValueOf(mockStorage).Interface().(*memory_storage.URLStorage)
+	for shortURL, webResourse := range rStorage.ShortURLs {
 		tests = append(tests, test{
 			name: nameTest + strconv.Itoa(testIndex),
 			URL:  webResourse.URL,
@@ -61,7 +64,7 @@ func TestShortenerAPIHandler_PostEndpoint(t *testing.T) {
 
 	server := server.NewServer(
 		shortenerPort)
-	server.MountHandlers(host, storage.GenMockStorage)
+	server.MountHandlers(host, mockStorage)
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 
