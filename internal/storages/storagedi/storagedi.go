@@ -1,4 +1,4 @@
-package storage_di
+package storagedi
 
 import (
 	"github.com/dimk00z/go-shortener-praktikum/internal/settings"

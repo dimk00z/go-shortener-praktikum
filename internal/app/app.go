@@ -6,7 +6,7 @@ import (
 
 	"github.com/dimk00z/go-shortener-praktikum/internal/server"
 	"github.com/dimk00z/go-shortener-praktikum/internal/settings"
-	"github.com/dimk00z/go-shortener-praktikum/internal/storages/storage_di"
+	"github.com/dimk00z/go-shortener-praktikum/internal/storages/storagedi"
 )
 
 func StartApp() {
@@ -15,7 +15,7 @@ func StartApp() {
 
 	host := config.Server.Host
 	server := server.NewServer(config.Server.Port)
-	storage := storage_di.GetStorage(config.Storage)
+	storage := storagedi.GetStorage(config.Storage)
 	defer storage.Close()
 
 	server.MountHandlers(host, storage)
