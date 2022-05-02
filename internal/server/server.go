@@ -35,6 +35,18 @@ func (s *ShortenerServer) MountHandlers(host string, st storageinterface.Storage
 	s.Router.Use(middleware.RequestID)
 	s.Router.Use(middleware.Logger)
 	s.Router.Use(middleware.Recoverer)
+
+	//Инкремент 8: вот тут не понял, обязательно ли писать компессор ибо он в коробке Chi есть?
+	compressedTypes := []string{
+		"text/html",
+		"text/css",
+		"text/plain",
+		"text/xml",
+		"application/javascript",
+		"application/json",
+	}
+	s.Router.Use(middleware.Compress(5, compressedTypes...))
+
 	// Mount all handlers here
 	// Sprint 1
 	s.Router.Route("/", func(r chi.Router) {
