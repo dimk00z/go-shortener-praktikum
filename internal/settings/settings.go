@@ -22,21 +22,20 @@ type Config struct {
 	Storage StorageConfig
 }
 
-func flagGiven(fl string) bool {
-	return flag.Lookup(fl) == nil
-}
-
 func (c *Config) checkFlags() {
-	if flagGiven("a") {
-		flag.StringVar(&c.Server.Port, "a", c.Server.Port, "SERVER_ADDRESS")
-	}
-	if flagGiven("b") {
-		flag.StringVar(&c.Server.Host, "b", c.Server.Port, "BASE_URL")
-	}
-	if flagGiven("f") {
-		flag.StringVar(&c.Storage.FileStorage.FilePath, "f", c.Storage.FileStorage.FilePath, "FILE_STORAGE_PATH")
-	}
+	flagPort := flag.String("a", "", "SERVER_ADDRESS")
+	flagHost := flag.String("b", "", "BASE_URL")
+	flagFileStorage := flag.String("f", "", "FILE_STORAGE_PATH")
 	flag.Parse()
+	if *flagPort != "" {
+		c.Server.Port = *flagPort
+	}
+	if *flagHost != "" {
+		c.Server.Host = *flagHost
+	}
+	if *flagFileStorage != "" {
+		c.Storage.FileStorage.FilePath = *flagFileStorage
+	}
 }
 
 var currentConfig *Config
