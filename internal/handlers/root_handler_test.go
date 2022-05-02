@@ -113,7 +113,7 @@ func TestRootHandler_PostEndpoint(t *testing.T) {
 		URL:  "wrong url",
 		want: want{
 			code:        http.StatusBadRequest,
-			result:      "Wrong URL given\n",
+			result:      "Wrong URL given -" + "wrong url\n",
 			contentType: "text/plain; charset=utf-8",
 		},
 	})

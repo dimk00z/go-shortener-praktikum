@@ -9,6 +9,7 @@ import (
 	"syscall"
 
 	"github.com/dimk00z/go-shortener-praktikum/internal/handlers"
+	"github.com/dimk00z/go-shortener-praktikum/internal/middleware/decompressor"
 	"github.com/dimk00z/go-shortener-praktikum/internal/storages/storageinterface"
 	"github.com/go-chi/chi"
 	"github.com/go-chi/chi/middleware"
@@ -35,17 +36,10 @@ func (s *ShortenerServer) MountHandlers(host string, st storageinterface.Storage
 	s.Router.Use(middleware.RequestID)
 	s.Router.Use(middleware.Logger)
 	s.Router.Use(middleware.Recoverer)
+	s.Router.Use(decompressor.DecompressHandler)
 
 	//Инкремент 8: вот тут не понял, обязательно ли писать компессор ибо он в коробке Chi есть?
-	compressedTypes := []string{
-		"text/html",
-		"text/css",
-		"text/plain",
-		"text/xml",
-		"application/javascript",
-		"application/json",
-	}
-	s.Router.Use(middleware.Compress(5, compressedTypes...))
+	s.Router.Use(middleware.Compress(5))
 
 	// Mount all handlers here
 	// Sprint 1

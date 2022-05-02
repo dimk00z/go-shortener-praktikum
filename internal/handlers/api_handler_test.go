@@ -57,7 +57,7 @@ func TestShortenerAPIHandler_PostEndpoint(t *testing.T) {
 			code: http.StatusBadRequest,
 			result: util.StuctEncode(struct {
 				Result string `json:"api_error"`
-			}{Result: "Wrong URL given"}),
+			}{Result: "Wrong URL given -" + "wrong url"}),
 			contentType: contentType,
 		},
 	})
