@@ -52,7 +52,7 @@ func (h RootHandler) HandlePOSTRequest(w http.ResponseWriter, r *http.Request) {
 	}
 	URL := string(body)
 	if !util.IsURL(URL) {
-		http.Error(w, "Wrong URL given", http.StatusBadRequest)
+		http.Error(w, "Wrong URL given -"+URL, http.StatusBadRequest)
 		return
 	}
 	shortURL := h.Storage.SaveURL(URL)
