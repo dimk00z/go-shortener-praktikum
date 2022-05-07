@@ -24,7 +24,10 @@ func NewFileStorage(filename string) (st *FileStorage) {
 		ShortURLs: make(map[string]webResourse),
 		fileName:  filename,
 	}
-	storage.load()
+	err := storage.load()
+	if err != nil {
+		log.Panicln(err)
+	}
 	return storage
 }
 
