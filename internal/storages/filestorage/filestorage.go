@@ -75,7 +75,7 @@ func (st *FileStorage) GetByShortURL(requiredURL string) (shortURL string, err e
 	}
 }
 func (st *FileStorage) updateFile() error {
-	file, err := os.OpenFile(st.fileName, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0777)
+	file, err := os.OpenFile(st.fileName, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0644)
 	if err != nil {
 		log.Println(err)
 		return err
@@ -84,6 +84,10 @@ func (st *FileStorage) updateFile() error {
 	encoder := json.NewEncoder(file)
 	encoder.SetEscapeHTML(false)
 	encoder.Encode(&st.ShortURLs)
+	err = file.Sync()
+	if err != nil {
+		log.Println(err)
+	}
 	return nil
 }
 func (st *FileStorage) Close() (err error) {
