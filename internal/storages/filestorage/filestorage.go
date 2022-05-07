@@ -24,14 +24,12 @@ func NewFileStorage(filename string) (st *FileStorage) {
 		ShortURLs: make(map[string]webResourse),
 		fileName:  filename,
 	}
-	err := storage.load()
-	if err != nil {
-		log.Panicln(err)
-	}
+	storage.load()
 	return storage
 }
 
-func (st *FileStorage) load() (err error) {
+func (st *FileStorage) load() {
+	var err error
 	file, err := os.OpenFile(st.fileName, os.O_RDONLY|os.O_CREATE, 0777)
 	if err != nil {
 		log.Panicln(err)
@@ -41,12 +39,10 @@ func (st *FileStorage) load() (err error) {
 	decoder := json.NewDecoder(file)
 	if err := decoder.Decode(&loadedData); err != nil {
 		log.Println(err)
-		return err
 	}
 	log.Printf("%+v\n", loadedData)
 	st.ShortURLs = loadedData
 	log.Println("Loaded from", st.fileName)
-	return nil
 }
 
 func (st *FileStorage) SaveURL(URL string) (shortURL string) {
