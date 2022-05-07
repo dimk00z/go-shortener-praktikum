@@ -2,7 +2,9 @@ package settings
 
 import (
 	"flag"
+	"fmt"
 	"log"
+	"sync"
 
 	"github.com/caarlos0/env"
 )
@@ -38,21 +40,22 @@ func (c *Config) checkFlags() {
 	}
 }
 
-var currentConfig *Config
+var (
+	currentConfig Config
+	once          sync.Once
+)
 
-func LoadConfig() *Config {
-	if currentConfig != nil {
-		return currentConfig
-	}
-	cfg := new(Config)
-	if err := env.Parse(&cfg.Server); err != nil {
-		log.Printf("%+v\n", err)
-	}
-	if err := env.Parse(&cfg.Storage.FileStorage); err != nil {
-		log.Printf("%+v\n", err)
-	}
-	cfg.checkFlags()
-	currentConfig = cfg
+func LoadConfig() Config {
+	once.Do(func() {
+		if err := env.Parse(&currentConfig.Server); err != nil {
+			log.Printf("%+v\n", err)
+		}
+		if err := env.Parse(&currentConfig.Storage.FileStorage); err != nil {
+			log.Printf("%+v\n", err)
+		}
+		currentConfig.checkFlags()
+		fmt.Println("here")
+	})
 	return currentConfig
 
 }

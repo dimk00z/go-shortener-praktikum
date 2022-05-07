@@ -38,7 +38,6 @@ func (s *ShortenerServer) MountHandlers(host string, st storageinterface.Storage
 	s.Router.Use(middleware.Recoverer)
 	s.Router.Use(decompressor.DecompressHandler)
 
-	//Инкремент 8: вот тут не понял, обязательно ли писать компессор ибо он в коробке Chi есть?
 	s.Router.Use(middleware.Compress(5))
 
 	// Mount all handlers here
