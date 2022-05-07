@@ -44,7 +44,8 @@ func (h ShortenerAPIHandler) SaveJSON(w http.ResponseWriter, r *http.Request) {
 		util.JSONError(w, "Wrong URL given -"+u.URL, http.StatusBadRequest)
 		return
 	}
-	shortURL := h.Storage.SaveURL(u.URL)
+	shortURL := util.ShortenLink(u.URL)
+	h.Storage.SaveURL(u.URL, shortURL)
 	util.JSONResponse(w, struct {
 		Result string `json:"result"`
 	}{

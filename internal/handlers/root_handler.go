@@ -55,7 +55,8 @@ func (h RootHandler) HandlePOSTRequest(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Wrong URL given -"+URL, http.StatusBadRequest)
 		return
 	}
-	shortURL := h.Storage.SaveURL(URL)
+	shortURL := util.ShortenLink(URL)
+	h.Storage.SaveURL(URL, shortURL)
 
 	w.Header().Add("Content-Type", "text/plain; charset=utf-8")
 	w.WriteHeader(http.StatusCreated)

@@ -5,8 +5,6 @@ import (
 	"errors"
 	"log"
 	"os"
-
-	"github.com/dimk00z/go-shortener-praktikum/internal/util"
 )
 
 type webResourse struct {
@@ -30,7 +28,7 @@ func NewFileStorage(filename string) (st *FileStorage) {
 
 func (st *FileStorage) load() {
 	var err error
-	file, err := os.OpenFile(st.fileName, os.O_RDONLY|os.O_CREATE, 0777)
+	file, err := os.OpenFile(st.fileName, os.O_RDONLY|os.O_CREATE, 0644)
 	if err != nil {
 		log.Panicln(err)
 	}
@@ -45,11 +43,10 @@ func (st *FileStorage) load() {
 	log.Println("Loaded from", st.fileName)
 }
 
-func (st *FileStorage) SaveURL(URL string) (shortURL string) {
+func (st *FileStorage) SaveURL(URL string, shortURL string) {
 
-	shortURL = util.GetMD5Hash(URL)
 	if _, ok := st.ShortURLs[shortURL]; ok {
-		return shortURL
+		return
 	}
 	wb := webResourse{
 		URL:     URL,
@@ -61,7 +58,6 @@ func (st *FileStorage) SaveURL(URL string) (shortURL string) {
 	if err != nil {
 		log.Println(err)
 	}
-	return shortURL
 
 }
 func (st *FileStorage) GetByShortURL(requiredURL string) (shortURL string, err error) {

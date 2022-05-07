@@ -3,8 +3,6 @@ package memorystorage
 import (
 	"errors"
 	"log"
-
-	"github.com/dimk00z/go-shortener-praktikum/internal/util"
 )
 
 type webResourse struct {
@@ -22,14 +20,12 @@ func NewStorage() *URLStorage {
 	}
 }
 
-func (st *URLStorage) SaveURL(URL string) (shortURL string) {
+func (st *URLStorage) SaveURL(URL string, shortURL string) {
 
-	shortURL = util.GetMD5Hash(URL)
 	st.ShortURLs[shortURL] = webResourse{
 		URL:     URL,
 		counter: 0}
 	log.Println(shortURL, st.ShortURLs[shortURL])
-	return
 
 }
 
