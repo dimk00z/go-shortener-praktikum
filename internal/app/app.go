@@ -16,9 +16,8 @@ func StartApp() {
 	host := config.Server.Host
 	server := server.NewServer(config.Server.Port)
 	storage := storagedi.GetStorage(config.Storage)
-	defer storage.Close()
 
 	server.MountHandlers(host, storage)
 	ctx, cancel := context.WithCancel(context.Background())
-	server.RunServer(ctx, cancel)
+	server.RunServer(ctx, cancel, storage)
 }

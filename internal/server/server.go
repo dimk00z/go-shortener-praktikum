@@ -61,7 +61,7 @@ func (s *ShortenerServer) MountHandlers(host string, st storageinterface.Storage
 	s.Router.Mount("/api", apiRouter)
 }
 
-func (s ShortenerServer) RunServer(ctx context.Context, cancel context.CancelFunc) {
+func (s ShortenerServer) RunServer(ctx context.Context, cancel context.CancelFunc, storage storageinterface.Storage) {
 	interrupt := make(chan os.Signal, 1)
 	signal.Notify(interrupt, os.Interrupt, syscall.SIGTERM)
 	go func() {
@@ -77,5 +77,6 @@ func (s ShortenerServer) RunServer(ctx context.Context, cancel context.CancelFun
 		log.Print("Got ", killSignal)
 	case <-ctx.Done():
 	}
-	log.Print("Done")
+	storage.Close()
+	log.Print("Server closed")
 }
