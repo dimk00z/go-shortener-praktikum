@@ -8,14 +8,17 @@ import (
 	"os/signal"
 	"syscall"
 
+	"github.com/dimk00z/go-shortener-praktikum/internal/handlers"
+	"github.com/dimk00z/go-shortener-praktikum/internal/middleware/decompressor"
+	"github.com/dimk00z/go-shortener-praktikum/internal/storages/storageinterface"
 	"github.com/go-chi/chi"
 	"github.com/go-chi/chi/middleware"
 )
 
-type Handler interface {
-	HandlePOSTRequest(w http.ResponseWriter, r *http.Request)
-	HandleGETRequest(w http.ResponseWriter, r *http.Request)
-}
+// type Handler interface {
+// 	HandlePOSTRequest(w http.ResponseWriter, r *http.Request)
+// 	HandleGETRequest(w http.ResponseWriter, r *http.Request)
+// }
 
 type ShortenerServer struct {
 	port   string
@@ -28,19 +31,37 @@ func NewServer(port string) *ShortenerServer {
 		Router: chi.NewRouter(),
 	}
 }
-func (s *ShortenerServer) MountHandlers(r Handler) {
+func (s *ShortenerServer) MountHandlers(host string, st storageinterface.Storage) {
 	// Mount all Middleware here
 	s.Router.Use(middleware.RequestID)
 	s.Router.Use(middleware.Logger)
 	s.Router.Use(middleware.Recoverer)
+	s.Router.Use(decompressor.DecompressHandler)
+
+	s.Router.Use(middleware.Compress(5))
+
 	// Mount all handlers here
+	// Sprint 1
+	s.Router.Route("/", func(r chi.Router) {
+		h := handlers.NewRootHandler(host,
+			st)
 
-	s.Router.Post("/", r.HandlePOSTRequest)
-	s.Router.Get("/{shortURL}", r.HandleGETRequest)
-
+		r.Post("/", h.HandlePOSTRequest)
+		r.Get("/{shortURL}", h.HandleGETRequest)
+	})
+	// Sprint 2
+	shortenerRouter := chi.NewRouter()
+	shortenerRouter.Route("/", func(r chi.Router) {
+		h := handlers.NewShortenerAPIHandler(host,
+			st)
+		r.Post("/", h.SaveJSON)
+	})
+	apiRouter := chi.NewRouter()
+	apiRouter.Mount("/shorten", shortenerRouter)
+	s.Router.Mount("/api", apiRouter)
 }
 
-func (s ShortenerServer) RunServer(ctx context.Context, cancel context.CancelFunc) {
+func (s ShortenerServer) RunServer(ctx context.Context, cancel context.CancelFunc, storage storageinterface.Storage) {
 	interrupt := make(chan os.Signal, 1)
 	signal.Notify(interrupt, os.Interrupt, syscall.SIGTERM)
 	go func() {
@@ -56,5 +77,6 @@ func (s ShortenerServer) RunServer(ctx context.Context, cancel context.CancelFun
 		log.Print("Got ", killSignal)
 	case <-ctx.Done():
 	}
-	log.Print("Done")
+	storage.Close()
+	log.Print("Server closed")
 }

@@ -1,27 +1,31 @@
-package handlers
+package handlers_test
 
 import (
 	"fmt"
 	"io"
 	"net/http"
 	"net/http/httptest"
+	"reflect"
 	"strconv"
 	"strings"
 	"testing"
 
-	"github.com/dimk00z/go-shortener-praktikum/internal/storage"
+	"github.com/dimk00z/go-shortener-praktikum/internal/server"
+	"github.com/dimk00z/go-shortener-praktikum/internal/storages/memorystorage"
 	"github.com/stretchr/testify/assert"
 )
 
-// func executeRequest(req *http.Request, s *server.ShortenerServer) *httptest.ResponseRecorder {
-// 	rr := httptest.NewRecorder()
-// 	s.Router.ServeHTTP(rr, req)
-// 	return rr
-// }
+func executeRequest(req *http.Request, s *server.ShortenerServer) *http.Response {
+	rr := httptest.NewRecorder()
+	s.Router.ServeHTTP(rr, req)
+
+	return rr.Result()
+}
+
 func TestRootHandler_GetEndpoint(t *testing.T) {
 	shortenerPort := ":8080"
 	host := "http://localhost" + shortenerPort
-	mockStorage := *storage.GenMockData()
+	mockStorage := memorystorage.GenMockStorage()
 	type want struct {
 		code           int
 		locationHeader string
@@ -34,9 +38,9 @@ func TestRootHandler_GetEndpoint(t *testing.T) {
 	tests := []test{}
 	testIndex := 1
 	nameTest := "GetEndpoint test "
-
+	rStorage := reflect.ValueOf(mockStorage).Interface().(*memorystorage.URLStorage)
 	//add correct mock data
-	for shortURL, webResourse := range mockStorage.ShortURLs {
+	for shortURL, webResourse := range rStorage.ShortURLs {
 		tests = append(tests, test{
 			name:     nameTest + strconv.Itoa(testIndex),
 			shortURL: shortURL,
@@ -57,22 +61,19 @@ func TestRootHandler_GetEndpoint(t *testing.T) {
 		},
 	})
 
+	server := server.NewServer(
+		shortenerPort)
+	server.MountHandlers(host, mockStorage)
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			request := httptest.NewRequest(http.MethodGet, "/"+tt.shortURL, nil)
-			w := httptest.NewRecorder()
-
-			h := NewRootHandler(host)
-			h.storage = mockStorage
-
-			h.HandleGETRequest(w, request)
-			res := w.Result()
+			response := executeRequest(request, server)
 			// check status code
-			assert.Equal(t, tt.want.code, res.StatusCode, "wrong answer code")
+			assert.Equal(t, tt.want.code, response.StatusCode, "wrong answer code")
 
 			// check Location in header
-			assert.Equal(t, tt.want.locationHeader, res.Header.Get("Location"), "wrong answer code")
-			defer res.Body.Close()
+			assert.Equal(t, tt.want.locationHeader, response.Header.Get("Location"), "wrong answer code")
+			defer response.Body.Close()
 		})
 	}
 }
@@ -93,9 +94,9 @@ func TestRootHandler_PostEndpoint(t *testing.T) {
 	tests := []test{}
 	testIndex := 1
 	nameTest := "PostEndpoint test "
-	mockStorage := *storage.GenMockData()
-
-	for shortURL, webResourse := range mockStorage.ShortURLs {
+	mockStorage := memorystorage.GenMockStorage()
+	rStorage := reflect.ValueOf(mockStorage).Interface().(*memorystorage.URLStorage)
+	for shortURL, webResourse := range rStorage.ShortURLs {
 		tests = append(tests, test{
 			name: nameTest + strconv.Itoa(testIndex),
 			URL:  webResourse.URL,
@@ -112,32 +113,31 @@ func TestRootHandler_PostEndpoint(t *testing.T) {
 		URL:  "wrong url",
 		want: want{
 			code:        http.StatusBadRequest,
-			result:      "Wrong URL given\n",
+			result:      "Wrong URL given -" + "wrong url\n",
 			contentType: "text/plain; charset=utf-8",
 		},
 	})
+
+	server := server.NewServer(
+		shortenerPort)
+	server.MountHandlers(host, mockStorage)
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			body := strings.NewReader(tt.URL)
 			request := httptest.NewRequest(http.MethodPost, "/", body)
-			w := httptest.NewRecorder()
-
-			h := NewRootHandler(host)
-
-			h.HandlePOSTRequest(w, request)
-			res := w.Result()
+			response := executeRequest(request, server)
 			// check status code
-			resBody, err := io.ReadAll(res.Body)
+			resBody, err := io.ReadAll(response.Body)
 			if err != nil {
 				t.Fatal(err)
 			}
-			assert.Equal(t, tt.want.code, res.StatusCode, "wrong answer code")
+			assert.Equal(t, tt.want.code, response.StatusCode, "wrong answer code")
 
 			assert.Equal(t, tt.want.result, string(resBody), "wrong result")
 
-			assert.Equal(t, tt.want.contentType, res.Header.Get("Content-Type"), "wrong content-type")
+			assert.Equal(t, tt.want.contentType, response.Header.Get("Content-Type"), "wrong content-type")
 
-			defer res.Body.Close()
+			defer response.Body.Close()
 
 		})
 	}

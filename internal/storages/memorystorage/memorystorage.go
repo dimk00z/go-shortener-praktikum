@@ -1,10 +1,8 @@
-package storage
+package memorystorage
 
 import (
 	"errors"
 	"log"
-
-	"github.com/dimk00z/go-shortener-praktikum/internal/util"
 )
 
 type webResourse struct {
@@ -22,18 +20,16 @@ func NewStorage() *URLStorage {
 	}
 }
 
-func (st URLStorage) SaveURL(URL string) (shortURL string) {
+func (st *URLStorage) SaveURL(URL string, shortURL string) {
 
-	shortURL = util.GetMD5Hash(URL, 4)
 	st.ShortURLs[shortURL] = webResourse{
 		URL:     URL,
 		counter: 0}
 	log.Println(shortURL, st.ShortURLs[shortURL])
-	return
 
 }
 
-func (st URLStorage) GetByShortURL(requiredURL string) (shortURL string, err error) {
+func (st *URLStorage) GetByShortURL(requiredURL string) (shortURL string, err error) {
 	webResourse, ok := st.ShortURLs[requiredURL]
 	if ok {
 		webResourse.counter += 1
@@ -46,4 +42,9 @@ func (st URLStorage) GetByShortURL(requiredURL string) (shortURL string, err err
 		err = errors.New(requiredURL + " does not exist")
 		return
 	}
+}
+
+func (st *URLStorage) Close() error {
+	log.Println("Memory storage closed")
+	return nil
 }

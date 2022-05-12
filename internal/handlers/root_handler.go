@@ -5,29 +5,29 @@ import (
 	"io/ioutil"
 	"log"
 	"net/http"
-	"strings"
 
-	"github.com/dimk00z/go-shortener-praktikum/internal/storage"
+	"github.com/dimk00z/go-shortener-praktikum/internal/storages/storageinterface"
 	"github.com/dimk00z/go-shortener-praktikum/internal/util"
+	"github.com/go-chi/chi"
 )
 
 type RootHandler struct {
-	storage storage.URLStorage
+	Storage storageinterface.Storage
 	host    string
 }
 
-func NewRootHandler(host string) *RootHandler {
+func NewRootHandler(host string, st storageinterface.Storage) *RootHandler {
 	return &RootHandler{
-		storage: *storage.NewStorage(),
+		Storage: st,
 		host:    host,
 	}
 }
 
 func (h RootHandler) HandleGETRequest(w http.ResponseWriter, r *http.Request) {
-	shortURL := strings.Replace(r.URL.Path, "/", "", 1)
+	shortURL := chi.URLParam(r, "shortURL")
 	log.Println("Get " + shortURL + " shortURL")
 	var err error
-	shortURL, err = h.storage.GetByShortURL(shortURL)
+	shortURL, err = h.Storage.GetByShortURL(shortURL)
 	if err != nil {
 		log.Println(shortURL, err)
 		http.Error(w, err.Error(), http.StatusNotFound)
@@ -40,8 +40,8 @@ func (h RootHandler) HandleGETRequest(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h RootHandler) HandlePOSTRequest(w http.ResponseWriter, r *http.Request) {
-	if r.Body == http.NoBody {
-		http.Error(w, "Request should have body", http.StatusBadRequest)
+
+	if err := util.RequestBodyCheck(w, r); err != nil {
 		return
 	}
 
@@ -52,10 +52,11 @@ func (h RootHandler) HandlePOSTRequest(w http.ResponseWriter, r *http.Request) {
 	}
 	URL := string(body)
 	if !util.IsURL(URL) {
-		http.Error(w, "Wrong URL given", http.StatusBadRequest)
+		http.Error(w, "Wrong URL given -"+URL, http.StatusBadRequest)
 		return
 	}
-	shortURL := h.storage.SaveURL(URL)
+	shortURL := util.ShortenLink(URL)
+	h.Storage.SaveURL(URL, shortURL)
 
 	w.Header().Add("Content-Type", "text/plain; charset=utf-8")
 	w.WriteHeader(http.StatusCreated)
