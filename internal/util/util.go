@@ -62,7 +62,6 @@ func GetCookieParam(paramName string, r *http.Request) (paramValue string) {
 		log.Println(err)
 		return
 	}
-	log.Println(cookieParam)
 	log.Printf("Cookie '%s':%s\n", paramName, cookieParam.Value)
 	return cookieParam.Value
 }

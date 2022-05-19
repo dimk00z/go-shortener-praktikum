@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"net/http"
 
+	"github.com/dimk00z/go-shortener-praktikum/internal/middleware/cookie"
 	"github.com/dimk00z/go-shortener-praktikum/internal/storages/storageinterface"
 	"github.com/dimk00z/go-shortener-praktikum/internal/util"
 )
@@ -45,7 +46,10 @@ func (h ShortenerAPIHandler) SaveJSON(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	shortURL := util.ShortenLink(u.URL)
-	h.Storage.SaveURL(u.URL, shortURL)
+	userIDCtx := r.Context().Value(cookie.UserIDCtxName).(string)
+
+	h.Storage.SaveURL(u.URL, shortURL, userIDCtx)
+
 	util.JSONResponse(w, struct {
 		Result string `json:"result"`
 	}{

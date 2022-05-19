@@ -43,7 +43,7 @@ func (st *FileStorage) load() {
 	log.Println("Loaded from", st.fileName)
 }
 
-func (st *FileStorage) SaveURL(URL string, shortURL string) {
+func (st *FileStorage) SaveURL(URL string, shortURL string, userId string) {
 
 	if _, ok := st.ShortURLs[shortURL]; ok {
 		return

@@ -28,12 +28,22 @@ func NewStorage() *URLStorage {
 	}
 }
 
-func (st *URLStorage) SaveURL(URL string, shortURL string) {
-
+func (st *URLStorage) SaveURL(URL string, shortURL string, userId string) {
+	if _, ok := st.ShortURLs[shortURL]; ok {
+		log.Println(URL, " has been already saved")
+		return
+	}
 	st.ShortURLs[shortURL] = webResourse{
 		URL:     URL,
 		counter: 0}
 	log.Println(shortURL, st.ShortURLs[shortURL])
+	if _, ok := st.UsersData[userId]; !ok {
+		st.UsersData[userId] = make([]UserURL, 0)
+	}
+	st.UsersData[userId] = append(st.UsersData[userId], UserURL{
+		URL:       URL,
+		Short_URL: shortURL,
+	})
 
 }
 

@@ -26,23 +26,22 @@ func CookieHandler(next http.Handler) http.Handler {
 		cookieUserID := util.GetCookieParam(cookieUserIDField, r)
 		log.Println(cookieUserID)
 		if cookieUserID != "" {
-			gettedUUID := uuid.FromStringOrNil(cookieUserID[:uuidStringLength])
-			requiredSign := GetSign(gettedUUID.Bytes())
+			gotUUID := uuid.FromStringOrNil(cookieUserID[:uuidStringLength])
+			requiredSign := GetSign(gotUUID.Bytes())
 			checkSign := cookieUserID[signSentencePosition:] == requiredSign
 			log.Println("Sign check status:", checkSign)
 			if checkSign {
-				next.ServeHTTP(w, r.WithContext(context.WithValue(r.Context(), UserIDCtxName, cookieUserID)))
+				next.ServeHTTP(w, r.WithContext(context.WithValue(r.Context(), UserIDCtxName, gotUUID.String())))
 				return
 			}
 		}
 		userID := uuid.NewV4()
 		log.Printf("User id: %s\n", userID)
 		stringSign := GetSign(userID.Bytes())
-		cookieUserID = userID.String() + "|" + stringSign
-		log.Println(string(userID.Bytes()))
+		cookieUserID = userID.String()
 		cookie := &http.Cookie{
 			Name:   cookieUserIDField,
-			Value:  cookieUserID,
+			Value:  cookieUserID + "|" + stringSign,
 			MaxAge: cookieMaxAge,
 			Path:   "/",
 		}

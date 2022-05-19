@@ -4,6 +4,7 @@ import (
 	"log"
 	"net/http"
 
+	"github.com/dimk00z/go-shortener-praktikum/internal/middleware/cookie"
 	"github.com/dimk00z/go-shortener-praktikum/internal/storages/storageinterface"
 	"github.com/dimk00z/go-shortener-praktikum/internal/util"
 )
@@ -27,7 +28,8 @@ func (h UserHandler) GetUserURLs(w http.ResponseWriter, r *http.Request) {
 		URL       string `json:"original_url"`
 	}
 	resultStatus := http.StatusOK
-	userURLs, err := h.Storage.GetUserURLs("user_name")
+	userIDCtx := r.Context().Value(cookie.UserIDCtxName).(string)
+	userURLs, err := h.Storage.GetUserURLs(userIDCtx)
 	if err != nil {
 		log.Println(err)
 		//TODO fix it resultStatus = http.StatusNoContent
