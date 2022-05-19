@@ -6,6 +6,7 @@ import (
 	"encoding/hex"
 	"encoding/json"
 	"errors"
+	"log"
 	"net/http"
 	"net/url"
 )
@@ -53,4 +54,15 @@ func JSONResponse(w http.ResponseWriter, message interface{}, code int) {
 	encoder := json.NewEncoder(w)
 	encoder.SetEscapeHTML(false)
 	encoder.Encode(message)
+}
+
+func GetCookieParam(paramName string, r *http.Request) (paramValue string) {
+	cookieParam, err := r.Cookie(paramName)
+	if err != nil {
+		log.Println(err)
+		return
+	}
+	log.Println(cookieParam)
+	log.Printf("Cookie '%s':%s\n", paramName, cookieParam.Value)
+	return cookieParam.Value
 }

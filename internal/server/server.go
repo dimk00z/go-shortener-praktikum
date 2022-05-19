@@ -9,6 +9,7 @@ import (
 	"syscall"
 
 	"github.com/dimk00z/go-shortener-praktikum/internal/handlers"
+	"github.com/dimk00z/go-shortener-praktikum/internal/middleware/cookie"
 	"github.com/dimk00z/go-shortener-praktikum/internal/middleware/decompressor"
 	"github.com/dimk00z/go-shortener-praktikum/internal/storages/storageinterface"
 	"github.com/go-chi/chi"
@@ -37,6 +38,7 @@ func (s *ShortenerServer) MountHandlers(host string, st storageinterface.Storage
 	s.Router.Use(middleware.Logger)
 	s.Router.Use(middleware.Recoverer)
 	s.Router.Use(decompressor.DecompressHandler)
+	s.Router.Use(cookie.CookieHandler)
 
 	s.Router.Use(middleware.Compress(5))
 
@@ -56,8 +58,20 @@ func (s *ShortenerServer) MountHandlers(host string, st storageinterface.Storage
 			st)
 		r.Post("/", h.SaveJSON)
 	})
+
+	// Sprint 3
+	userRouter := chi.NewRouter()
+	userRouter.Route("/", func(r chi.Router) {
+		userHandler := handlers.NewUserHandler(
+			host,
+			st)
+		r.Get("/urls", userHandler.GetUserURLs)
+	})
+
 	apiRouter := chi.NewRouter()
 	apiRouter.Mount("/shorten", shortenerRouter)
+	apiRouter.Mount("/user", userRouter)
+
 	s.Router.Mount("/api", apiRouter)
 }
 

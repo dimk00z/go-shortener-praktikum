@@ -2,7 +2,6 @@ package settings
 
 import (
 	"flag"
-	"fmt"
 	"log"
 	"sync"
 
@@ -19,9 +18,14 @@ type FileStorageConfig struct {
 type StorageConfig struct {
 	FileStorage FileStorageConfig
 }
+
+type SecurityConfig struct {
+	SecretKey string `env:"SECRET_KEY" envDefault:"SECRET_KEY"`
+}
 type Config struct {
-	Server  ServerConfig
-	Storage StorageConfig
+	Server   ServerConfig
+	Storage  StorageConfig
+	Security SecurityConfig
 }
 
 func (c *Config) checkFlags() {
@@ -53,8 +57,10 @@ func LoadConfig() Config {
 		if err := env.Parse(&currentConfig.Storage.FileStorage); err != nil {
 			log.Printf("%+v\n", err)
 		}
+		if err := env.Parse(&currentConfig.Security); err != nil {
+			log.Printf("%+v\n", err)
+		}
 		currentConfig.checkFlags()
-		fmt.Println("here")
 	})
 	return currentConfig
 

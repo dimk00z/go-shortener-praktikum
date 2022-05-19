@@ -2,6 +2,7 @@ package memorystorage
 
 import (
 	"errors"
+	"fmt"
 	"log"
 )
 
@@ -10,13 +11,20 @@ type webResourse struct {
 	counter int32
 }
 
+type UserURL struct {
+	Short_URL string
+	URL       string
+}
+
 type URLStorage struct {
 	ShortURLs map[string]webResourse
+	UsersData map[string][]UserURL
 }
 
 func NewStorage() *URLStorage {
 	return &URLStorage{
 		ShortURLs: make(map[string]webResourse),
+		UsersData: make(map[string][]UserURL),
 	}
 }
 
@@ -47,4 +55,34 @@ func (st *URLStorage) GetByShortURL(requiredURL string) (shortURL string, err er
 func (st *URLStorage) Close() error {
 	log.Println("Memory storage closed")
 	return nil
+}
+
+func (st *URLStorage) GetUserURLs(user string) (result []struct {
+	Short_URL string
+	URL       string
+}, err error) {
+	userURLS, ok := st.UsersData[user]
+	result = make([]struct {
+		Short_URL string
+		URL       string
+	}, len(userURLS))
+
+	for index, userURL := range userURLS {
+		result[index] = struct {
+			Short_URL string
+			URL       string
+		}{Short_URL: userURL.Short_URL,
+			URL: userURL.URL}
+	}
+
+	result = append(result,
+		UserURL{Short_URL: "Short_URL_test1", URL: "URL_test1"},
+		UserURL{Short_URL: "Short_URL_test2", URL: "URL_test2"})
+	fmt.Println(result)
+
+	if !ok {
+		return result, errors.New("no data fo user: " + user)
+	}
+
+	return
 }

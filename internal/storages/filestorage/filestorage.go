@@ -96,3 +96,10 @@ func (st *FileStorage) Close() (err error) {
 
 	return err
 }
+
+func (st *FileStorage) GetUserURLs(user string) (userURLS []struct {
+	Short_URL string
+	URL       string
+}, err error) {
+	return
+}
