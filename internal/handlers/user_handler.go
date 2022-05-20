@@ -24,8 +24,8 @@ func NewUserHandler(host string, st storageinterface.Storage) *UserHandler {
 func (h UserHandler) GetUserURLs(w http.ResponseWriter, r *http.Request) {
 
 	type result struct {
-		Short_URL string `json:"short_url"`
-		URL       string `json:"original_url"`
+		ShortURL string `json:"short_url"`
+		URL      string `json:"original_url"`
 	}
 	resultStatus := http.StatusOK
 	userIDCtx := r.Context().Value(cookie.UserIDCtxName).(string)
@@ -37,8 +37,8 @@ func (h UserHandler) GetUserURLs(w http.ResponseWriter, r *http.Request) {
 	results := make([]result, len(userURLs))
 	for index, userURL := range userURLs {
 		results[index] = result{
-			Short_URL: userURL.Short_URL,
-			URL:       userURL.URL,
+			ShortURL: h.host + "/" + userURL.ShortURL,
+			URL:      userURL.URL,
 		}
 	}
 	log.Println(results)

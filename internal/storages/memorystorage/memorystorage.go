@@ -67,22 +67,22 @@ func (st *URLStorage) Close() error {
 }
 
 func (st *URLStorage) GetUserURLs(user string) (result []struct {
-	Short_URL string
-	URL       string
+	ShortURL string
+	URL      string
 }, err error) {
 	userURLS, ok := st.UsersData[user]
 	result = make([]struct {
-		Short_URL string
-		URL       string
+		ShortURL string
+		URL      string
 	}, len(userURLS))
 	if !ok {
 		return result, errors.New("no data fo user: " + user)
 	}
 	for index, userURL := range userURLS {
 		result[index] = struct {
-			Short_URL string
-			URL       string
-		}{Short_URL: userURL.Short_URL,
+			ShortURL string
+			URL      string
+		}{ShortURL: userURL.Short_URL,
 			URL: userURL.URL}
 	}
 
