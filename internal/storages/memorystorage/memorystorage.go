@@ -2,7 +2,6 @@ package memorystorage
 
 import (
 	"errors"
-	"fmt"
 	"log"
 )
 
@@ -76,7 +75,9 @@ func (st *URLStorage) GetUserURLs(user string) (result []struct {
 		Short_URL string
 		URL       string
 	}, len(userURLS))
-
+	if !ok {
+		return result, errors.New("no data fo user: " + user)
+	}
 	for index, userURL := range userURLS {
 		result[index] = struct {
 			Short_URL string
@@ -85,14 +86,6 @@ func (st *URLStorage) GetUserURLs(user string) (result []struct {
 			URL: userURL.URL}
 	}
 
-	result = append(result,
-		UserURL{Short_URL: "Short_URL_test1", URL: "URL_test1"},
-		UserURL{Short_URL: "Short_URL_test2", URL: "URL_test2"})
-	fmt.Println(result)
-
-	if !ok {
-		return result, errors.New("no data fo user: " + user)
-	}
-
+	log.Println(user, result)
 	return
 }

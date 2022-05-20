@@ -32,7 +32,7 @@ func (h UserHandler) GetUserURLs(w http.ResponseWriter, r *http.Request) {
 	userURLs, err := h.Storage.GetUserURLs(userIDCtx)
 	if err != nil {
 		log.Println(err)
-		//TODO fix it resultStatus = http.StatusNoContent
+		resultStatus = http.StatusNoContent
 	}
 	results := make([]result, len(userURLs))
 	for index, userURL := range userURLs {

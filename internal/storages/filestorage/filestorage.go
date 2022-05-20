@@ -12,14 +12,21 @@ type webResourse struct {
 	Counter int32  `json:"counter"`
 }
 
+type UserURL struct {
+	Short_URL string
+	URL       string
+}
+
 type FileStorage struct {
-	fileName  string `json:"-"`
-	ShortURLs map[string]webResourse
+	fileName  string                 `json:"-"`
+	ShortURLs map[string]webResourse `json:"short_urls"`
+	UsersData map[string][]UserURL   `json:"users_data"`
 }
 
 func NewFileStorage(filename string) (st *FileStorage) {
 	storage := &FileStorage{
 		ShortURLs: make(map[string]webResourse),
+		UsersData: make(map[string][]UserURL),
 		fileName:  filename,
 	}
 	storage.load()
@@ -33,13 +40,11 @@ func (st *FileStorage) load() {
 		log.Panicln(err)
 	}
 	defer file.Close()
-	loadedData := make(map[string]webResourse)
 	decoder := json.NewDecoder(file)
-	if err := decoder.Decode(&loadedData); err != nil {
+	if err := decoder.Decode(&st); err != nil {
 		log.Println(err)
 	}
-	log.Printf("%+v\n", loadedData)
-	st.ShortURLs = loadedData
+	log.Printf("%+v\n", st)
 	log.Println("Loaded from", st.fileName)
 }
 
@@ -54,6 +59,15 @@ func (st *FileStorage) SaveURL(URL string, shortURL string, userId string) {
 	}
 	st.ShortURLs[shortURL] = wb
 	log.Println(shortURL, st.ShortURLs[shortURL])
+
+	if _, ok := st.UsersData[userId]; !ok {
+		st.UsersData[userId] = make([]UserURL, 0)
+	}
+	st.UsersData[userId] = append(st.UsersData[userId], UserURL{
+		URL:       URL,
+		Short_URL: shortURL,
+	})
+
 	err := st.updateFile()
 	if err != nil {
 		log.Println(err)
@@ -83,7 +97,8 @@ func (st *FileStorage) updateFile() error {
 	defer file.Close()
 	encoder := json.NewEncoder(file)
 	encoder.SetEscapeHTML(false)
-	encoder.Encode(&st.ShortURLs)
+	// encoder.Encode(&st.ShortURLs)
+	encoder.Encode(&st)
 	err = file.Sync()
 	if err != nil {
 		log.Println(err)
@@ -97,9 +112,27 @@ func (st *FileStorage) Close() (err error) {
 	return err
 }
 
-func (st *FileStorage) GetUserURLs(user string) (userURLS []struct {
+func (st *FileStorage) GetUserURLs(user string) (result []struct {
 	Short_URL string
 	URL       string
 }, err error) {
+	userURLS, ok := st.UsersData[user]
+	result = make([]struct {
+		Short_URL string
+		URL       string
+	}, len(userURLS))
+	if !ok {
+		return result, errors.New("no data fo user: " + user)
+	}
+	for index, userURL := range userURLS {
+		result[index] = struct {
+			Short_URL string
+			URL       string
+		}{Short_URL: userURL.Short_URL,
+			URL: userURL.URL}
+	}
+
+	log.Println(user, result)
+
 	return
 }
