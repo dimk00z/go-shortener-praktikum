@@ -13,8 +13,8 @@ type webResourse struct {
 }
 
 type UserURL struct {
-	Short_URL string
-	URL       string
+	ShortURL string
+	URL      string
 }
 
 type FileStorage struct {
@@ -48,7 +48,7 @@ func (st *FileStorage) load() {
 	log.Println("Loaded from", st.fileName)
 }
 
-func (st *FileStorage) SaveURL(URL string, shortURL string, userId string) {
+func (st *FileStorage) SaveURL(URL string, shortURL string, userID string) {
 
 	if _, ok := st.ShortURLs[shortURL]; ok {
 		return
@@ -60,12 +60,12 @@ func (st *FileStorage) SaveURL(URL string, shortURL string, userId string) {
 	st.ShortURLs[shortURL] = wb
 	log.Println(shortURL, st.ShortURLs[shortURL])
 
-	if _, ok := st.UsersData[userId]; !ok {
-		st.UsersData[userId] = make([]UserURL, 0)
+	if _, ok := st.UsersData[userID]; !ok {
+		st.UsersData[userID] = make([]UserURL, 0)
 	}
-	st.UsersData[userId] = append(st.UsersData[userId], UserURL{
-		URL:       URL,
-		Short_URL: shortURL,
+	st.UsersData[userID] = append(st.UsersData[userID], UserURL{
+		URL:      URL,
+		ShortURL: shortURL,
 	})
 
 	err := st.updateFile()
@@ -97,7 +97,6 @@ func (st *FileStorage) updateFile() error {
 	defer file.Close()
 	encoder := json.NewEncoder(file)
 	encoder.SetEscapeHTML(false)
-	// encoder.Encode(&st.ShortURLs)
 	encoder.Encode(&st)
 	err = file.Sync()
 	if err != nil {
@@ -128,7 +127,7 @@ func (st *FileStorage) GetUserURLs(user string) (result []struct {
 		result[index] = struct {
 			ShortURL string
 			URL      string
-		}{ShortURL: userURL.Short_URL,
+		}{ShortURL: userURL.ShortURL,
 			URL: userURL.URL}
 	}
 

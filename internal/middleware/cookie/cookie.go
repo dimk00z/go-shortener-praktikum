@@ -13,12 +13,14 @@ import (
 	uuid "github.com/satori/go.uuid"
 )
 
+type ContextType string
+
 const (
-	cookieUserIDField    string = "user_id"
-	cookieMaxAge         int    = 864000
-	uuidStringLength     int    = 36
-	signSentencePosition int    = 37
-	UserIDCtxName        string = "ctxUserId"
+	cookieUserIDField                = "user_id"
+	cookieMaxAge                     = 864000
+	uuidStringLength                 = 36
+	signSentencePosition             = 37
+	UserIDCtxName        ContextType = "ctxUserId"
 )
 
 func CookieHandler(next http.Handler) http.Handler {

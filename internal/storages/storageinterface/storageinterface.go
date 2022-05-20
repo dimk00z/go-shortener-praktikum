@@ -1,7 +1,7 @@
 package storageinterface
 
 type Storage interface {
-	SaveURL(URL string, shortURL string, userId string)
+	SaveURL(URL string, shortURL string, userID string)
 	GetByShortURL(requiredURL string) (shortURL string, err error)
 	GetUserURLs(user string) (userURLS []struct {
 		ShortURL string

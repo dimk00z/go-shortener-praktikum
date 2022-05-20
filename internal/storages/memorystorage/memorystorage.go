@@ -11,8 +11,8 @@ type webResourse struct {
 }
 
 type UserURL struct {
-	Short_URL string
-	URL       string
+	ShortURL string
+	URL      string
 }
 
 type URLStorage struct {
@@ -27,7 +27,7 @@ func NewStorage() *URLStorage {
 	}
 }
 
-func (st *URLStorage) SaveURL(URL string, shortURL string, userId string) {
+func (st *URLStorage) SaveURL(URL string, shortURL string, userID string) {
 	if _, ok := st.ShortURLs[shortURL]; ok {
 		log.Println(URL, " has been already saved")
 		return
@@ -36,12 +36,12 @@ func (st *URLStorage) SaveURL(URL string, shortURL string, userId string) {
 		URL:     URL,
 		counter: 0}
 	log.Println(shortURL, st.ShortURLs[shortURL])
-	if _, ok := st.UsersData[userId]; !ok {
-		st.UsersData[userId] = make([]UserURL, 0)
+	if _, ok := st.UsersData[userID]; !ok {
+		st.UsersData[userID] = make([]UserURL, 0)
 	}
-	st.UsersData[userId] = append(st.UsersData[userId], UserURL{
-		URL:       URL,
-		Short_URL: shortURL,
+	st.UsersData[userID] = append(st.UsersData[userID], UserURL{
+		URL:      URL,
+		ShortURL: shortURL,
 	})
 
 }
@@ -82,7 +82,7 @@ func (st *URLStorage) GetUserURLs(user string) (result []struct {
 		result[index] = struct {
 			ShortURL string
 			URL      string
-		}{ShortURL: userURL.Short_URL,
+		}{ShortURL: userURL.ShortURL,
 			URL: userURL.URL}
 	}
 
