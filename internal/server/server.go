@@ -67,12 +67,18 @@ func (s *ShortenerServer) MountHandlers(host string, st storageinterface.Storage
 			st)
 		r.Get("/urls", userHandler.GetUserURLs)
 	})
-
+	dbRouter := chi.NewRouter()
+	dbRouter.Route("/", func(r chi.Router) {
+		dbHandler := handlers.NewDBHandler(host,
+			st)
+		r.Get("/", dbHandler.PingDB)
+	})
 	apiRouter := chi.NewRouter()
 	apiRouter.Mount("/shorten", shortenerRouter)
 	apiRouter.Mount("/user", userRouter)
 
 	s.Router.Mount("/api", apiRouter)
+	s.Router.Mount("/ping", dbRouter)
 }
 
 func (s ShortenerServer) RunServer(ctx context.Context, cancel context.CancelFunc, storage storageinterface.Storage) {
