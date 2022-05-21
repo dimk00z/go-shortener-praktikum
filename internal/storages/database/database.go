@@ -47,6 +47,7 @@ func (st *DataBaseStorage) GetUserURLs(user string) (result []struct {
 	rows, err := st.db.QueryContext(ctx, fmt.Sprintf(getUserURLsQuery, user))
 	defer rows.Close()
 	if err != nil {
+		log.Println(err)
 		return
 	}
 	for rows.Next() {
@@ -59,6 +60,10 @@ func (st *DataBaseStorage) GetUserURLs(user string) (result []struct {
 			continue
 		}
 		result = append(result, res)
+	}
+	err = rows.Err()
+	if err != nil {
+		log.Println(err)
 	}
 	return
 }
