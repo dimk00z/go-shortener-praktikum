@@ -1,17 +1,35 @@
 package database
 
+import (
+	"context"
+	"database/sql"
+	"log"
+
+	_ "github.com/jackc/pgx/v4/stdlib"
+)
+
 type DataBaseStorage struct {
-	DataSourceName string
+	db *sql.DB
 }
 
 func NewDataBaseStorage(DataSourceName string) *DataBaseStorage {
+	db, err := sql.Open("pgx", DataSourceName)
+	if err != nil {
+		log.Println(err)
+	}
 	return &DataBaseStorage{
-		DataSourceName: DataSourceName,
+		db: db,
 	}
 }
 
 func (st *DataBaseStorage) Close() (err error) {
-	return err
+	err = st.db.Close()
+	if err != nil {
+		log.Println(err)
+	} else {
+		log.Println("Database connection closed correctly")
+	}
+	return
 }
 
 func (st *DataBaseStorage) GetUserURLs(user string) (result []struct {
@@ -26,4 +44,8 @@ func (st *DataBaseStorage) GetByShortURL(requiredURL string) (shortURL string, e
 
 func (st *DataBaseStorage) SaveURL(URL string, shortURL string, userID string) {
 	return
+}
+
+func (st *DataBaseStorage) CheckConnection(ctx context.Context) error {
+	return st.db.PingContext(ctx)
 }

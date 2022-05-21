@@ -1,6 +1,7 @@
 package memorystorage
 
 import (
+	"context"
 	"errors"
 	"log"
 )
@@ -64,6 +65,10 @@ func (st *URLStorage) GetByShortURL(requiredURL string) (shortURL string, err er
 func (st *URLStorage) Close() error {
 	log.Println("Memory storage closed")
 	return nil
+}
+
+func (st *URLStorage) CheckConnection(ctx context.Context) error {
+	return errors.New("wrong storage type")
 }
 
 func (st *URLStorage) GetUserURLs(user string) (result []struct {

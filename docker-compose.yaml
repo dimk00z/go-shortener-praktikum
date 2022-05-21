@@ -5,7 +5,7 @@ services:
     image: docker.io/bitnami/postgresql:13
     volumes:
       - 'postgresql_data:/bitnami/postgresql'
-     ports:
+    ports:
       - "5432:5432"
     expose:
       - 5432

@@ -1,5 +1,7 @@
 package storageinterface
 
+import "context"
+
 type Storage interface {
 	SaveURL(URL string, shortURL string, userID string)
 	GetByShortURL(requiredURL string) (shortURL string, err error)
@@ -8,4 +10,5 @@ type Storage interface {
 		URL      string
 	}, err error)
 	Close() error
+	CheckConnection(ctx context.Context) error
 }

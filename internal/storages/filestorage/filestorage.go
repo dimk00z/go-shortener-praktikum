@@ -1,6 +1,7 @@
 package filestorage
 
 import (
+	"context"
 	"encoding/json"
 	"errors"
 	"log"
@@ -109,6 +110,10 @@ func (st *FileStorage) Close() (err error) {
 	log.Println("Filestorage closed correctly")
 
 	return err
+}
+
+func (st *FileStorage) CheckConnection(ctx context.Context) error {
+	return errors.New("wrong storage type")
 }
 
 func (st *FileStorage) GetUserURLs(user string) (result []struct {
