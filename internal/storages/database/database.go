@@ -45,11 +45,12 @@ func (st *DataBaseStorage) GetUserURLs(user string) (result []struct {
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 	rows, err := st.db.QueryContext(ctx, fmt.Sprintf(getUserURLsQuery, user))
-	defer rows.Close()
 	if err != nil {
 		log.Println(err)
 		return
 	}
+	defer rows.Close()
+
 	for rows.Next() {
 		var res struct {
 			ShortURL string
