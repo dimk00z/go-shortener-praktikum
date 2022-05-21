@@ -47,7 +47,7 @@ func (st *URLStorage) SaveURL(URL string, shortURL string, userID string) {
 
 }
 
-func (st *URLStorage) GetByShortURL(requiredURL string) (shortURL string, err error) {
+func (st *URLStorage) GetByShortURL(requiredURL string) (URL string, err error) {
 	webResourse, ok := st.ShortURLs[requiredURL]
 	if ok {
 		webResourse.counter += 1
