@@ -43,7 +43,7 @@ func (st *DataBaseStorage) GetByShortURL(requiredURL string) (shortURL string, e
 }
 
 func (st *DataBaseStorage) SaveURL(URL string, shortURL string, userID string) {
-	return
+
 }
 
 func (st *DataBaseStorage) CheckConnection(ctx context.Context) error {

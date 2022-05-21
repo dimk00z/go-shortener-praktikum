@@ -27,7 +27,6 @@ func GetStorage(storageConfig settings.StorageConfig) (st storageinterface.Stora
 			return
 		}
 		st = memorystorage.NewStorage()
-		return
 	})
 	return st
 }
