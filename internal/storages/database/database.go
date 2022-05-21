@@ -6,7 +6,6 @@ import (
 	"log"
 
 	_ "github.com/jackc/pgx/v4/stdlib"
-	"github.com/qustavo/dotsql"
 )
 
 type DataBaseStorage struct {
@@ -19,18 +18,18 @@ func NewDataBaseStorage(DataSourceName string, sqlFilePath string) *DataBaseStor
 	if err != nil {
 		log.Println(err)
 	}
-	dot, err := dotsql.LoadFromFile(sqlFilePath)
-	if err != nil {
-		log.Println(err)
-	}
+	// dot, err := dotsql.LoadFromFile(sqlFilePath)
+	// if err != nil {
+	// 	log.Println(err)
+	// }
 
-	if _, err := dot.Exec(db, "create-users-table"); err != nil {
-		log.Println(err)
-	}
+	// if _, err := dot.Exec(db, "create-users-table"); err != nil {
+	// 	log.Println(err)
+	// }
 
-	if _, err = dot.Exec(db, "create-web-resourse-table"); err != nil {
-		log.Println(err)
-	}
+	// if _, err = dot.Exec(db, "create-web-resourse-table"); err != nil {
+	// 	log.Println(err)
+	// }
 
 	return &DataBaseStorage{
 		db:          db,
