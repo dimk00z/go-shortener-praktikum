@@ -2,6 +2,8 @@ package settings
 
 import (
 	"flag"
+	"fmt"
+	"io/ioutil"
 	"log"
 	"os"
 	"path/filepath"
@@ -82,6 +84,16 @@ func LoadConfig() Config {
 		//TODO не забыть, что под виндой не оживет из-за разницы в путях
 		projectDir := filepath.Dir(filepath.Dir(path))
 		currentConfig.Storage.DBStorage.SQLScriptsFile = filepath.Join(projectDir, currentConfig.Storage.DBStorage.SQLScriptsFile)
+		file, err := os.Open(currentConfig.Storage.DBStorage.SQLScriptsFile)
+		if err != nil {
+			log.Println(err)
+		}
+		b, err := ioutil.ReadAll(file)
+		if err != nil {
+			log.Println(err)
+		}
+
+		fmt.Print(string(b))
 		currentConfig.checkFlags()
 	})
 	return currentConfig
