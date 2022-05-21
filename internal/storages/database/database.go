@@ -6,19 +6,35 @@ import (
 	"log"
 
 	_ "github.com/jackc/pgx/v4/stdlib"
+	"github.com/qustavo/dotsql"
 )
 
 type DataBaseStorage struct {
-	db *sql.DB
+	db          *sql.DB
+	sqlFilePath string
 }
 
-func NewDataBaseStorage(DataSourceName string) *DataBaseStorage {
+func NewDataBaseStorage(DataSourceName string, sqlFilePath string) *DataBaseStorage {
 	db, err := sql.Open("pgx", DataSourceName)
 	if err != nil {
 		log.Println(err)
 	}
+	dot, err := dotsql.LoadFromFile(sqlFilePath)
+	if err != nil {
+		log.Println(err)
+	}
+
+	if _, err := dot.Exec(db, "create-users-table"); err != nil {
+		log.Println(err)
+	}
+
+	if _, err = dot.Exec(db, "create-web-resourse-table"); err != nil {
+		log.Println(err)
+	}
+
 	return &DataBaseStorage{
-		db: db,
+		db:          db,
+		sqlFilePath: sqlFilePath,
 	}
 }
 

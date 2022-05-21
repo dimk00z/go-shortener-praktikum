@@ -32,18 +32,4 @@ func (h *DBHandler) PingDB(w http.ResponseWriter, r *http.Request) {
 		Message string `json:"message"`
 	}{Message: message}, status)
 
-	// switch h.Storage.(type) {
-	// case *database.DataBaseStorage:
-	// 	message := "connection established"
-	// 	status := http.StatusOK
-	// 	if err := h.Storage.CheckConnection(r.Context()); err != nil {
-	// 		message = err.Error()
-	// 		status = http.StatusInternalServerError
-	// 	}
-	// 	util.JSONResponse(w, struct {
-	// 		Message string `json:"message"`
-	// 	}{Message: message}, status)
-	// default:
-	// 	util.JSONError(w, "Wrong storage loaded", http.StatusInternalServerError)
-	// }
 }

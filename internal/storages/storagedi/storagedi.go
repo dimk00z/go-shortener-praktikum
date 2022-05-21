@@ -19,7 +19,7 @@ func GetStorage(storageConfig settings.StorageConfig) (st storageinterface.Stora
 	once.Do(func() {
 		storageConfig := settings.LoadConfig().Storage
 		if storageConfig.DBStorage.DataSourceName != "" {
-			st = database.NewDataBaseStorage(storageConfig.DBStorage.DataSourceName)
+			st = database.NewDataBaseStorage(storageConfig.DBStorage.DataSourceName, storageConfig.DBStorage.SQLScriptsFile)
 			return
 		}
 		if storageConfig.FileStorage.FilePath != "" {

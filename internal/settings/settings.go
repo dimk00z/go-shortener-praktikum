@@ -3,6 +3,8 @@ package settings
 import (
 	"flag"
 	"log"
+	"os"
+	"path/filepath"
 	"sync"
 
 	"github.com/caarlos0/env"
@@ -14,6 +16,7 @@ type ServerConfig struct {
 }
 type DBStorageConfig struct {
 	DataSourceName string `env:"DATABASE_DSN"`
+	SQLScriptsFile string `env:"SERVER_ADDRESS" envDefault:"/scripts/sql/scripts.sql"`
 }
 type FileStorageConfig struct {
 	FilePath string `env:"FILE_STORAGE_PATH"`
@@ -66,11 +69,19 @@ func LoadConfig() Config {
 			log.Printf("%+v\n", err)
 		}
 		if err := env.Parse(&currentConfig.Storage.DBStorage); err != nil {
+
 			log.Printf("%+v\n", err)
 		}
 		if err := env.Parse(&currentConfig.Security); err != nil {
 			log.Printf("%+v\n", err)
 		}
+		path, err := os.Getwd()
+		if err != nil {
+			log.Println(err)
+		}
+		//TODO не забыть, что под виндой не оживет из-за разницы в путях
+		projectDir := filepath.Dir(filepath.Dir(path))
+		currentConfig.Storage.DBStorage.SQLScriptsFile = filepath.Join(projectDir, currentConfig.Storage.DBStorage.SQLScriptsFile)
 		currentConfig.checkFlags()
 	})
 	return currentConfig
