@@ -8,6 +8,8 @@ import (
 	"log"
 	"time"
 
+	"github.com/cenkalti/backoff"
+	"github.com/dimk00z/go-shortener-praktikum/internal/settings"
 	"github.com/gofrs/uuid"
 	_ "github.com/jackc/pgx/v4/stdlib"
 )
@@ -16,16 +18,29 @@ type DataBaseStorage struct {
 	db *sql.DB
 }
 
-func NewDataBaseStorage(DataSourceName string) *DataBaseStorage {
-	db, err := sql.Open("pgx", DataSourceName)
-	if err != nil {
-		log.Println(err)
+func NewDataBaseStorage(dbConfig settings.DBStorageConfig) *DataBaseStorage {
+	st := &DataBaseStorage{}
+	b := backoff.WithMaxRetries(backoff.NewExponentialBackOff(), uint64(dbConfig.MaxReties))
+	operation := func() error {
+		log.Println("Trying to connect to DB")
+		db, err := sql.Open("pgx", dbConfig.DataSourceName)
+		if err != nil {
+			log.Println(err)
+			return err
+		}
+		if err = db.Ping(); err != nil {
+			log.Println(err)
+			return err
+		}
+		log.Println("DB connection is established")
+		st.db = db
+		return nil
 	}
-	createTables(db, createUsersTableQuery, createWebResourseTableQuery)
-
-	return &DataBaseStorage{
-		db: db,
+	if err := backoff.Retry(operation, b); err != nil {
+		log.Panicln(err)
 	}
+	createTables(st.db, createUsersTableQuery, createWebResourseTableQuery)
+	return st
 }
 
 func (st *DataBaseStorage) Close() (err error) {

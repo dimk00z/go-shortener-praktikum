@@ -14,6 +14,7 @@ type ServerConfig struct {
 }
 type DBStorageConfig struct {
 	DataSourceName string `env:"DATABASE_DSN"`
+	MaxReties      int    `env:"MAX_RETIES" envDefault:"10"`
 }
 
 type FileStorageConfig struct {
