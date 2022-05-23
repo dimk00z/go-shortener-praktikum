@@ -111,14 +111,17 @@ func (st *DataBaseStorage) GetByShortURL(requiredURL string) (URL string, err er
 	return
 }
 
-func (st *DataBaseStorage) SaveURL(URL string, shortURL string, userID string) {
-	// addUser
+func (st *DataBaseStorage) saveUser(userID string) {
 	if !checkValueExists(st.db, "user", "user_id", userID) {
 		_, err := st.db.Exec(fmt.Sprintf(insertUserQuery, userID))
 		if err != nil {
 			log.Println(err)
 		}
 	}
+}
+
+func (st *DataBaseStorage) SaveURL(URL string, shortURL string, userID string) {
+	st.saveUser(userID)
 	webResourseUUID, err := uuid.NewV4()
 	if err != nil {
 		log.Println(err)
@@ -134,7 +137,8 @@ func (st *DataBaseStorage) SaveURL(URL string, shortURL string, userID string) {
 
 func (st *DataBaseStorage) SaveBatch(
 	batch models.BatchURLs,
-	user string) (result models.BatchShortURLs, err error) {
+	userID string) (result models.BatchShortURLs, err error) {
+	st.saveUser(userID)
 
 	result = make(models.BatchShortURLs, len(batch))
 	tx, err := st.db.Begin()
@@ -169,7 +173,7 @@ func (st *DataBaseStorage) SaveBatch(
 			row.OriginalURL,
 			row.ShortURL,
 			0,
-			user); err != nil {
+			userID); err != nil {
 			log.Println(err)
 		}
 	}
