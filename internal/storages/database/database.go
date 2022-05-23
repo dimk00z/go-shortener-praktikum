@@ -20,7 +20,7 @@ type DataBaseStorage struct {
 
 func NewDataBaseStorage(dbConfig settings.DBStorageConfig) *DataBaseStorage {
 	st := &DataBaseStorage{}
-	b := backoff.WithMaxRetries(backoff.NewExponentialBackOff(), uint64(dbConfig.MaxReties))
+	b := backoff.WithMaxRetries(backoff.NewExponentialBackOff(), uint64(dbConfig.MaxRetries))
 	operation := func() error {
 		log.Println("Trying to connect to DB")
 		db, err := sql.Open("pgx", dbConfig.DataSourceName)
