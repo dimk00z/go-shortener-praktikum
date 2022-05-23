@@ -158,27 +158,27 @@ func (st *DataBaseStorage) SaveBatch(
 	for index, row := range batch {
 		webResourseUUID, err := uuid.NewV4()
 		if err != nil {
-			log.Println("Close statement error")
+			log.Println(err)
 		}
+		result[index].ShortURL = row.ShortURL
+		result[index].CorrelationID = row.CorrelationID
+
 		if _, err = stmt.ExecContext(
 			context.Background(),
 			webResourseUUID.String(),
 			row.OriginalURL,
 			row.ShortURL,
 			0,
-			user); err == nil {
-			result[index].ShortURL = row.ShortURL
-			result[index].CorrelationID = row.CorrelationID
-			continue
+			user); err != nil {
+			log.Println(err)
 		}
-		log.Println(err)
 	}
 
 	err = tx.Commit()
 	if err != nil {
-		return nil, err
+		log.Println(err)
 	}
-	return result, err
+	return
 }
 
 func (st *DataBaseStorage) CheckConnection(ctx context.Context) error {
