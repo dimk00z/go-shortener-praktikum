@@ -80,5 +80,8 @@ func (h ShortenerAPIHandler) SaveBatch(w http.ResponseWriter, r *http.Request) {
 		util.JSONError(w, err, http.StatusBadRequest)
 		return
 	}
+	for index := range resultURLs {
+		resultURLs[index].ShortURL = fmt.Sprintf("%s/%s", h.host, resultURLs[index].ShortURL)
+	}
 	util.JSONResponse(w, resultURLs, http.StatusCreated)
 }

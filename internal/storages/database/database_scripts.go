@@ -36,6 +36,18 @@ INSERT INTO
 VALUES
     ('%s', '%s','%s', %s, '%s');
 `
+const insertWebResourseBatchQuery = `
+INSERT INTO
+    public.web_resourse(
+        web_resourse_id,
+        url,
+        short_url,
+        counter,
+        user_id
+    )
+VALUES
+    ($1, $2,$3, $4, $5)
+	ON CONFLICT (user_id, url) DO NOTHING;`
 
 const checkValueExistsQuery = `
 	SELECT 
