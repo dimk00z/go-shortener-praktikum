@@ -3,11 +3,11 @@ package handlers
 import (
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
 	"log"
 	"net/http"
 
 	"github.com/dimk00z/go-shortener-praktikum/internal/middleware/cookie"
+	"github.com/dimk00z/go-shortener-praktikum/internal/models"
 	"github.com/dimk00z/go-shortener-praktikum/internal/storages/storageinterface"
 	"github.com/dimk00z/go-shortener-praktikum/internal/util"
 )
@@ -60,9 +60,25 @@ func (h ShortenerAPIHandler) SaveJSON(w http.ResponseWriter, r *http.Request) {
 
 }
 
+// Sprint 3 Increment 12
 func (h ShortenerAPIHandler) SaveBatch(w http.ResponseWriter, r *http.Request) {
+	if err := util.RequestBodyCheck(w, r); err != nil {
+		return
+	}
+	var requestData models.BatchURLs
+	if err := json.NewDecoder(r.Body).Decode(&requestData); err != nil {
+		util.JSONError(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+	for index, field := range requestData {
+		requestData[index].ShortURL = util.ShortenLink(field.OriginalURL)
+	}
+	log.Println(requestData)
 	userIDCtx := r.Context().Value(cookie.UserIDCtxName).(string)
-	data, _ := ioutil.ReadAll(r.Body)
-	log.Println(string(data))
-	util.JSONError(w, "Batch saved, user "+userIDCtx, http.StatusBadRequest)
+	resultURLs, err := h.Storage.SaveBatch(requestData, userIDCtx)
+	if err != nil {
+		util.JSONError(w, err, http.StatusBadRequest)
+		return
+	}
+	util.JSONResponse(w, resultURLs, http.StatusCreated)
 }

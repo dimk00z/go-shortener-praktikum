@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"github.com/cenkalti/backoff"
+	"github.com/dimk00z/go-shortener-praktikum/internal/models"
 	"github.com/dimk00z/go-shortener-praktikum/internal/settings"
 	"github.com/gofrs/uuid"
 	_ "github.com/jackc/pgx/v4/stdlib"
@@ -129,6 +130,22 @@ func (st *DataBaseStorage) SaveURL(URL string, shortURL string, userID string) {
 		log.Println(err)
 	}
 
+}
+
+func (st *DataBaseStorage) SaveBatch(
+	batch models.BatchURLs,
+	user string) (result models.BatchShortURLs, err error) {
+	result = make(models.BatchShortURLs, len(batch))
+	tx, err := st.db.Begin()
+	if err != nil {
+		log.Println(err)
+		return
+	}
+	// var insertStmt *sql.Stmt
+	// TODO add batch
+	defer tx.Rollback()
+
+	return result, err
 }
 
 func (st *DataBaseStorage) CheckConnection(ctx context.Context) error {

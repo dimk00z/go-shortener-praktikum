@@ -4,6 +4,8 @@ import (
 	"context"
 	"errors"
 	"log"
+
+	"github.com/dimk00z/go-shortener-praktikum/internal/models"
 )
 
 type webResourse struct {
@@ -93,4 +95,16 @@ func (st *URLStorage) GetUserURLs(user string) (result []struct {
 
 	log.Println(user, result)
 	return
+}
+
+func (st *URLStorage) SaveBatch(
+	batch models.BatchURLs,
+	user string) (result models.BatchShortURLs, err error) {
+	result = make(models.BatchShortURLs, len(batch))
+	for index, row := range batch {
+		st.SaveURL(row.OriginalURL, row.ShortURL, user)
+		result[index].CorrelationID = row.CorrelationID
+		result[index].ShortURL = row.ShortURL
+	}
+	return result, err
 }
