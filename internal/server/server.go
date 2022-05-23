@@ -57,6 +57,8 @@ func (s *ShortenerServer) MountHandlers(host string, st storageinterface.Storage
 		h := handlers.NewShortenerAPIHandler(host,
 			st)
 		r.Post("/", h.SaveJSON)
+		// Sprint 3 Increment 12
+		r.Post("/batch", h.SaveBatch)
 	})
 
 	// Sprint 3

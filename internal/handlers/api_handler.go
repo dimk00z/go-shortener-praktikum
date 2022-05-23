@@ -3,6 +3,8 @@ package handlers
 import (
 	"encoding/json"
 	"fmt"
+	"io/ioutil"
+	"log"
 	"net/http"
 
 	"github.com/dimk00z/go-shortener-praktikum/internal/middleware/cookie"
@@ -56,4 +58,11 @@ func (h ShortenerAPIHandler) SaveJSON(w http.ResponseWriter, r *http.Request) {
 		Result: fmt.Sprintf("%s/%s", h.host, shortURL),
 	}, http.StatusCreated)
 
+}
+
+func (h ShortenerAPIHandler) SaveBatch(w http.ResponseWriter, r *http.Request) {
+	userIDCtx := r.Context().Value(cookie.UserIDCtxName).(string)
+	data, _ := ioutil.ReadAll(r.Body)
+	log.Println(string(data))
+	util.JSONError(w, "Batch saved, user "+userIDCtx, http.StatusBadRequest)
 }
