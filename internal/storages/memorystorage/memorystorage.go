@@ -6,6 +6,7 @@ import (
 	"log"
 
 	"github.com/dimk00z/go-shortener-praktikum/internal/models"
+	"github.com/dimk00z/go-shortener-praktikum/internal/storages/storageerrors"
 )
 
 type webResourse struct {
@@ -30,10 +31,10 @@ func NewStorage() *URLStorage {
 	}
 }
 
-func (st *URLStorage) SaveURL(URL string, shortURL string, userID string) {
+func (st *URLStorage) SaveURL(URL string, shortURL string, userID string) (err error) {
 	if _, ok := st.ShortURLs[shortURL]; ok {
 		log.Println(URL, " has been already saved")
-		return
+		return storageerrors.ErrURLAlreadySave
 	}
 	st.ShortURLs[shortURL] = webResourse{
 		URL:     URL,
@@ -46,7 +47,7 @@ func (st *URLStorage) SaveURL(URL string, shortURL string, userID string) {
 		URL:      URL,
 		ShortURL: shortURL,
 	})
-
+	return
 }
 
 func (st *URLStorage) GetByShortURL(requiredURL string) (URL string, err error) {

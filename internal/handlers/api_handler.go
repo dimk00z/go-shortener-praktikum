@@ -2,12 +2,14 @@ package handlers
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"log"
 	"net/http"
 
 	"github.com/dimk00z/go-shortener-praktikum/internal/middleware/cookie"
 	"github.com/dimk00z/go-shortener-praktikum/internal/models"
+	"github.com/dimk00z/go-shortener-praktikum/internal/storages/storageerrors"
 	"github.com/dimk00z/go-shortener-praktikum/internal/storages/storageinterface"
 	"github.com/dimk00z/go-shortener-praktikum/internal/util"
 )
@@ -50,13 +52,16 @@ func (h ShortenerAPIHandler) SaveJSON(w http.ResponseWriter, r *http.Request) {
 	shortURL := util.ShortenLink(u.URL)
 	userIDCtx := r.Context().Value(cookie.UserIDCtxName).(string)
 
-	h.Storage.SaveURL(u.URL, shortURL, userIDCtx)
-
+	err := h.Storage.SaveURL(u.URL, shortURL, userIDCtx)
+	resultStatus := http.StatusCreated
+	if errors.Is(err, storageerrors.ErrURLAlreadySave) {
+		resultStatus = http.StatusConflict
+	}
 	util.JSONResponse(w, struct {
 		Result string `json:"result"`
 	}{
 		Result: fmt.Sprintf("%s/%s", h.host, shortURL),
-	}, http.StatusCreated)
+	}, resultStatus)
 
 }
 

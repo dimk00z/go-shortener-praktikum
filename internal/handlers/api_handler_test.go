@@ -41,7 +41,7 @@ func TestShortenerAPIHandler_PostEndpoint(t *testing.T) {
 			name: nameTest + strconv.Itoa(testIndex),
 			URL:  webResourse.URL,
 			want: want{
-				code: http.StatusCreated,
+				code: http.StatusConflict,
 				result: util.StuctEncode(struct {
 					Result string `json:"result"`
 				}{Result: fmt.Sprintf("%s/%s", host, shortURL)}),

@@ -11,7 +11,10 @@ import (
 	"github.com/cenkalti/backoff"
 	"github.com/dimk00z/go-shortener-praktikum/internal/models"
 	"github.com/dimk00z/go-shortener-praktikum/internal/settings"
+	"github.com/dimk00z/go-shortener-praktikum/internal/storages/storageerrors"
 	"github.com/gofrs/uuid"
+	"github.com/jackc/pgconn"
+	"github.com/jackc/pgerrcode"
 	_ "github.com/jackc/pgx/v4/stdlib"
 )
 
@@ -120,7 +123,7 @@ func (st *DataBaseStorage) saveUser(userID string) {
 	}
 }
 
-func (st *DataBaseStorage) SaveURL(URL string, shortURL string, userID string) {
+func (st *DataBaseStorage) SaveURL(URL string, shortURL string, userID string) (err error) {
 	st.saveUser(userID)
 	webResourseUUID, err := uuid.NewV4()
 	if err != nil {
@@ -129,10 +132,17 @@ func (st *DataBaseStorage) SaveURL(URL string, shortURL string, userID string) {
 	_, err = st.db.Exec(
 		fmt.Sprintf(insertWebResourseQuery,
 			webResourseUUID.String(), URL, shortURL, "0", userID))
-	if err != nil {
-		log.Println(err)
-	}
 
+	if err == nil {
+		return
+	}
+	log.Println(err)
+	if pqerr, ok := err.(*pgconn.PgError); ok {
+		if pgerrcode.IsIntegrityConstraintViolation(pqerr.Code) {
+			return storageerrors.ErrURLAlreadySave
+		}
+	}
+	return
 }
 
 func (st *DataBaseStorage) SaveBatch(

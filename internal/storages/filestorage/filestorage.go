@@ -8,6 +8,7 @@ import (
 	"os"
 
 	"github.com/dimk00z/go-shortener-praktikum/internal/models"
+	"github.com/dimk00z/go-shortener-praktikum/internal/storages/storageerrors"
 )
 
 type webResourse struct {
@@ -51,10 +52,10 @@ func (st *FileStorage) load() {
 	log.Println("Loaded from", st.fileName)
 }
 
-func (st *FileStorage) SaveURL(URL string, shortURL string, userID string) {
+func (st *FileStorage) SaveURL(URL string, shortURL string, userID string) (err error) {
 
 	if _, ok := st.ShortURLs[shortURL]; ok {
-		return
+		return storageerrors.ErrURLAlreadySave
 	}
 	wb := webResourse{
 		URL:     URL,
@@ -71,11 +72,11 @@ func (st *FileStorage) SaveURL(URL string, shortURL string, userID string) {
 		ShortURL: shortURL,
 	})
 
-	err := st.updateFile()
+	err = st.updateFile()
 	if err != nil {
 		log.Println(err)
 	}
-
+	return
 }
 
 func (st *FileStorage) SaveBatch(

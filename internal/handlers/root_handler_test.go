@@ -101,7 +101,7 @@ func TestRootHandler_PostEndpoint(t *testing.T) {
 			name: nameTest + strconv.Itoa(testIndex),
 			URL:  webResourse.URL,
 			want: want{
-				code:        http.StatusCreated,
+				code:        http.StatusConflict,
 				result:      fmt.Sprintf("%s/%s", host, shortURL),
 				contentType: "text/plain; charset=utf-8",
 			},
