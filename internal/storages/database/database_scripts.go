@@ -22,7 +22,7 @@ CREATE TABLE IF NOT EXISTS "public"."web_resourse" (
 const insertUserQuery = `
 	INSERT INTO
  		"public"."user" (user_id)
-	VALUES ('%s');`
+	VALUES ($1);`
 
 const insertWebResourseQuery = `
 INSERT INTO
@@ -34,7 +34,7 @@ INSERT INTO
         user_id
     )
 VALUES
-    ('%s', '%s','%s', %s, '%s');
+    ($1, $2, $3, $4, $5);
 `
 const insertWebResourseBatchQuery = `
 INSERT INTO
@@ -55,7 +55,7 @@ const checkValueExistsQuery = `
 	FROM 
 		"public"."%s"
 	WHERE
-		%s='%s';
+		%s=$1;
 `
 
 const getURLQuery = `
@@ -68,7 +68,7 @@ SELECT
 FROM
     public.web_resourse
 WHERE
-    short_url = '%s';
+    short_url = $1;
 `
 const getUserURLsQuery = `
 SELECT
@@ -77,13 +77,13 @@ SELECT
 FROM
     public.web_resourse
 WHERE
-    user_id = '%s';
+    user_id = $1;
 `
 const updateCounterQuery = `
 UPDATE
     public.web_resourse
 SET
-    counter = %v
+    counter = $1
 WHERE
-    web_resourse_id = '%s';
+    web_resourse_id = $2;
 `

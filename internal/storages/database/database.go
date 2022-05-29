@@ -60,7 +60,7 @@ func (st *DataBaseStorage) Close() (err error) {
 func (st *DataBaseStorage) GetUserURLs(user string) (result models.UserURLs, err error) {
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
-	rows, err := st.db.QueryContext(ctx, fmt.Sprintf(getUserURLsQuery, user))
+	rows, err := st.db.QueryContext(ctx, getUserURLsQuery, user)
 	if err != nil {
 		log.Println(err)
 		return
@@ -92,7 +92,7 @@ type webResourse struct {
 
 func (st *DataBaseStorage) GetByShortURL(requiredURL string) (URL string, err error) {
 	result := webResourse{}
-	err = st.db.QueryRow(fmt.Sprintf(getURLQuery, requiredURL)).Scan(
+	err = st.db.QueryRow(getURLQuery, requiredURL).Scan(
 		&result.webResourseID, &result.URL, &result.shortURL, &result.counter, &result.userID)
 	if err != nil {
 		err = errors.New(requiredURL + " does not exist")
@@ -100,7 +100,7 @@ func (st *DataBaseStorage) GetByShortURL(requiredURL string) (URL string, err er
 	}
 	log.Println(result, err)
 	URL = result.URL
-	_, err = st.db.Exec(fmt.Sprintf(updateCounterQuery, result.counter+1, result.webResourseID))
+	_, err = st.db.Exec(updateCounterQuery, result.counter+1, result.webResourseID)
 	if err != nil {
 		log.Println(err)
 	}
@@ -110,7 +110,7 @@ func (st *DataBaseStorage) GetByShortURL(requiredURL string) (URL string, err er
 
 func (st *DataBaseStorage) saveUser(userID string) {
 	if !checkValueExists(st.db, "user", "user_id", userID) {
-		_, err := st.db.Exec(fmt.Sprintf(insertUserQuery, userID))
+		_, err := st.db.Exec(insertUserQuery, userID)
 		if err != nil {
 			log.Println(err)
 		}
@@ -123,9 +123,8 @@ func (st *DataBaseStorage) SaveURL(URL string, shortURL string, userID string) (
 	if err != nil {
 		log.Println(err)
 	}
-	_, err = st.db.Exec(
-		fmt.Sprintf(insertWebResourseQuery,
-			webResourseUUID.String(), URL, shortURL, "0", userID))
+	_, err = st.db.Exec(insertWebResourseQuery,
+		webResourseUUID.String(), URL, shortURL, "0", userID)
 
 	if err == nil {
 		return
@@ -203,7 +202,8 @@ func createTables(db *sql.DB, tables ...string) {
 
 func checkValueExists(db *sql.DB, table string, field string, value string) bool {
 	var count int
-	err := db.QueryRow(fmt.Sprintf(checkValueExistsQuery, field, table, field, value)).Scan(&count)
+	query := fmt.Sprintf(checkValueExistsQuery, field, table, field)
+	err := db.QueryRow(query, value).Scan(&count)
 	if err != nil {
 		log.Println(err)
 	}
