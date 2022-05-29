@@ -11,7 +11,9 @@ type BatchShortURLs []struct {
 	ShortURL      string `json:"short_url"`
 }
 
-type UserURLs []struct {
-	ShortURL string
-	URL      string
+type UserURL struct {
+	ShortURL string `json:"short_url"`
+	URL      string `json:"original_url"`
 }
+
+type UserURLs []UserURL

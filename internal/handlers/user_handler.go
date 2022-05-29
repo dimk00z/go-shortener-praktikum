@@ -5,6 +5,7 @@ import (
 	"net/http"
 
 	"github.com/dimk00z/go-shortener-praktikum/internal/middleware/cookie"
+	"github.com/dimk00z/go-shortener-praktikum/internal/models"
 	"github.com/dimk00z/go-shortener-praktikum/internal/storages/storageinterface"
 	"github.com/dimk00z/go-shortener-praktikum/internal/util"
 )
@@ -23,10 +24,6 @@ func NewUserHandler(host string, st storageinterface.Storage) *UserHandler {
 
 func (h UserHandler) GetUserURLs(w http.ResponseWriter, r *http.Request) {
 
-	type result struct {
-		ShortURL string `json:"short_url"`
-		URL      string `json:"original_url"`
-	}
 	resultStatus := http.StatusOK
 	userIDCtx := r.Context().Value(cookie.UserIDCtxName).(string)
 	userURLs, err := h.Storage.GetUserURLs(userIDCtx)
@@ -34,9 +31,9 @@ func (h UserHandler) GetUserURLs(w http.ResponseWriter, r *http.Request) {
 		log.Println(err)
 		resultStatus = http.StatusNoContent
 	}
-	results := make([]result, len(userURLs))
+	results := make([]models.UserURL, len(userURLs))
 	for index, userURL := range userURLs {
-		results[index] = result{
+		results[index] = models.UserURL{
 			ShortURL: h.host + "/" + userURL.ShortURL,
 			URL:      userURL.URL,
 		}

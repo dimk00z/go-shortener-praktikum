@@ -68,10 +68,7 @@ func (st *DataBaseStorage) GetUserURLs(user string) (result models.UserURLs, err
 	defer rows.Close()
 
 	for rows.Next() {
-		var res struct {
-			ShortURL string
-			URL      string
-		}
+		var res models.UserURL
 		err = rows.Scan(&res.URL, &res.ShortURL)
 		if err != nil {
 			continue

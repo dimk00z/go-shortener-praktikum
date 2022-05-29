@@ -135,18 +135,12 @@ func (st *FileStorage) CheckConnection(ctx context.Context) error {
 
 func (st *FileStorage) GetUserURLs(user string) (result models.UserURLs, err error) {
 	userURLS, ok := st.UsersData[user]
-	result = make([]struct {
-		ShortURL string
-		URL      string
-	}, len(userURLS))
+	result = make([]models.UserURL, len(userURLS))
 	if !ok {
 		return result, errors.New("no data fo user: " + user)
 	}
 	for index, userURL := range userURLS {
-		result[index] = struct {
-			ShortURL string
-			URL      string
-		}{ShortURL: userURL.ShortURL,
+		result[index] = models.UserURL{ShortURL: userURL.ShortURL,
 			URL: userURL.URL}
 	}
 
