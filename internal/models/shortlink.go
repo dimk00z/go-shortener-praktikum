@@ -10,3 +10,8 @@ type BatchShortURLs []struct {
 	CorrelationID string `json:"correlation_id"`
 	ShortURL      string `json:"short_url"`
 }
+
+type UserURLs []struct {
+	ShortURL string
+	URL      string
+}

@@ -74,10 +74,7 @@ func (st *URLStorage) CheckConnection(ctx context.Context) error {
 	return errors.New("wrong storage type")
 }
 
-func (st *URLStorage) GetUserURLs(user string) (result []struct {
-	ShortURL string
-	URL      string
-}, err error) {
+func (st *URLStorage) GetUserURLs(user string) (result models.UserURLs, err error) {
 	userURLS, ok := st.UsersData[user]
 	result = make([]struct {
 		ShortURL string

@@ -9,10 +9,7 @@ import (
 type Storage interface {
 	SaveURL(URL string, shortURL string, userID string) (err error)
 	GetByShortURL(requiredURL string) (URL string, err error)
-	GetUserURLs(user string) (userURLS []struct {
-		ShortURL string
-		URL      string
-	}, err error)
+	GetUserURLs(user string) (result models.UserURLs, err error)
 	Close() error
 	CheckConnection(ctx context.Context) error
 	SaveBatch(
