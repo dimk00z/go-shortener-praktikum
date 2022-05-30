@@ -1,10 +1,14 @@
 package filestorage
 
 import (
+	"context"
 	"encoding/json"
 	"errors"
 	"log"
 	"os"
+
+	"github.com/dimk00z/go-shortener-praktikum/internal/models"
+	"github.com/dimk00z/go-shortener-praktikum/internal/storages/storageerrors"
 )
 
 type webResourse struct {
@@ -12,14 +16,21 @@ type webResourse struct {
 	Counter int32  `json:"counter"`
 }
 
+type UserURL struct {
+	ShortURL string
+	URL      string
+}
+
 type FileStorage struct {
-	fileName  string `json:"-"`
-	ShortURLs map[string]webResourse
+	fileName  string                 `json:"-"`
+	ShortURLs map[string]webResourse `json:"short_urls"`
+	UsersData map[string][]UserURL   `json:"users_data"`
 }
 
 func NewFileStorage(filename string) (st *FileStorage) {
 	storage := &FileStorage{
 		ShortURLs: make(map[string]webResourse),
+		UsersData: make(map[string][]UserURL),
 		fileName:  filename,
 	}
 	storage.load()
@@ -33,20 +44,18 @@ func (st *FileStorage) load() {
 		log.Panicln(err)
 	}
 	defer file.Close()
-	loadedData := make(map[string]webResourse)
 	decoder := json.NewDecoder(file)
-	if err := decoder.Decode(&loadedData); err != nil {
+	if err := decoder.Decode(&st); err != nil {
 		log.Println(err)
 	}
-	log.Printf("%+v\n", loadedData)
-	st.ShortURLs = loadedData
+	log.Printf("%+v\n", st)
 	log.Println("Loaded from", st.fileName)
 }
 
-func (st *FileStorage) SaveURL(URL string, shortURL string) {
+func (st *FileStorage) SaveURL(URL string, shortURL string, userID string) (err error) {
 
 	if _, ok := st.ShortURLs[shortURL]; ok {
-		return
+		return storageerrors.ErrURLAlreadySave
 	}
 	wb := webResourse{
 		URL:     URL,
@@ -54,13 +63,36 @@ func (st *FileStorage) SaveURL(URL string, shortURL string) {
 	}
 	st.ShortURLs[shortURL] = wb
 	log.Println(shortURL, st.ShortURLs[shortURL])
-	err := st.updateFile()
+
+	if _, ok := st.UsersData[userID]; !ok {
+		st.UsersData[userID] = make([]UserURL, 0)
+	}
+	st.UsersData[userID] = append(st.UsersData[userID], UserURL{
+		URL:      URL,
+		ShortURL: shortURL,
+	})
+
+	err = st.updateFile()
 	if err != nil {
 		log.Println(err)
 	}
+	return
+}
+
+func (st *FileStorage) SaveBatch(
+	batch models.BatchURLs,
+	user string) (result models.BatchShortURLs, err error) {
+	result = make(models.BatchShortURLs, len(batch))
+	for index, row := range batch {
+		st.SaveURL(row.OriginalURL, row.ShortURL, user)
+		result[index].CorrelationID = row.CorrelationID
+		result[index].ShortURL = row.ShortURL
+	}
+	return result, err
 
 }
-func (st *FileStorage) GetByShortURL(requiredURL string) (shortURL string, err error) {
+
+func (st *FileStorage) GetByShortURL(requiredURL string) (URL string, err error) {
 	webResourse, ok := st.ShortURLs[requiredURL]
 	if ok {
 		webResourse.Counter += 1
@@ -83,7 +115,7 @@ func (st *FileStorage) updateFile() error {
 	defer file.Close()
 	encoder := json.NewEncoder(file)
 	encoder.SetEscapeHTML(false)
-	encoder.Encode(&st.ShortURLs)
+	encoder.Encode(&st)
 	err = file.Sync()
 	if err != nil {
 		log.Println(err)
@@ -95,4 +127,24 @@ func (st *FileStorage) Close() (err error) {
 	log.Println("Filestorage closed correctly")
 
 	return err
+}
+
+func (st *FileStorage) CheckConnection(ctx context.Context) error {
+	return errors.New("wrong storage type")
+}
+
+func (st *FileStorage) GetUserURLs(user string) (result models.UserURLs, err error) {
+	userURLS, ok := st.UsersData[user]
+	result = make([]models.UserURL, len(userURLS))
+	if !ok {
+		return result, errors.New("no data fo user: " + user)
+	}
+	for index, userURL := range userURLS {
+		result[index] = models.UserURL{ShortURL: userURL.ShortURL,
+			URL: userURL.URL}
+	}
+
+	log.Println(user, result)
+
+	return
 }

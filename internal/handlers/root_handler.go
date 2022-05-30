@@ -1,11 +1,14 @@
 package handlers
 
 import (
+	"errors"
 	"fmt"
 	"io/ioutil"
 	"log"
 	"net/http"
 
+	"github.com/dimk00z/go-shortener-praktikum/internal/middleware/cookie"
+	"github.com/dimk00z/go-shortener-praktikum/internal/storages/storageerrors"
 	"github.com/dimk00z/go-shortener-praktikum/internal/storages/storageinterface"
 	"github.com/dimk00z/go-shortener-praktikum/internal/util"
 	"github.com/go-chi/chi"
@@ -56,10 +59,15 @@ func (h RootHandler) HandlePOSTRequest(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	shortURL := util.ShortenLink(URL)
-	h.Storage.SaveURL(URL, shortURL)
+	userIDCtx := r.Context().Value(cookie.UserIDCtxName).(string)
+	err = h.Storage.SaveURL(URL, shortURL, userIDCtx)
+	resultStatus := http.StatusCreated
+	if errors.Is(err, storageerrors.ErrURLAlreadySave) {
+		resultStatus = http.StatusConflict
+	}
 
 	w.Header().Add("Content-Type", "text/plain; charset=utf-8")
-	w.WriteHeader(http.StatusCreated)
+	w.WriteHeader(resultStatus)
 	_, err = w.Write([]byte(fmt.Sprintf("%s/%s", h.host, shortURL)))
 	if err != nil {
 		log.Fatal(err)
