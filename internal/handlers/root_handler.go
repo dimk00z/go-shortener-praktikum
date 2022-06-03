@@ -8,6 +8,7 @@ import (
 	"net/http"
 
 	"github.com/dimk00z/go-shortener-praktikum/internal/middleware/cookie"
+	"github.com/dimk00z/go-shortener-praktikum/internal/shortenererrors"
 	"github.com/dimk00z/go-shortener-praktikum/internal/storages/storageerrors"
 	"github.com/dimk00z/go-shortener-praktikum/internal/storages/storageinterface"
 	"github.com/dimk00z/go-shortener-praktikum/internal/util"
@@ -31,15 +32,22 @@ func (h RootHandler) HandleGETRequest(w http.ResponseWriter, r *http.Request) {
 	log.Println("Get " + shortURL + " shortURL")
 	var err error
 	shortURL, err = h.Storage.GetByShortURL(shortURL)
+	statusCode := http.StatusTemporaryRedirect
 	if err != nil {
 		log.Println(shortURL, err)
-		http.Error(w, err.Error(), http.StatusNotFound)
-		return
-	} else {
-		w.Header().Set("Location", shortURL)
-		w.WriteHeader(http.StatusTemporaryRedirect)
+
+		if errors.Is(err, shortenererrors.ErrURLNotFound) {
+			statusCode = http.StatusNotFound
+		}
+		if errors.Is(err, shortenererrors.ErrURLDeleted) {
+			statusCode = http.StatusGone
+		}
+		http.Error(w, err.Error(), statusCode)
 		return
 	}
+	w.Header().Set("Location", shortURL)
+	w.WriteHeader(statusCode)
+
 }
 
 func (h RootHandler) HandlePOSTRequest(w http.ResponseWriter, r *http.Request) {

@@ -11,6 +11,7 @@ import (
 	"github.com/cenkalti/backoff"
 	"github.com/dimk00z/go-shortener-praktikum/internal/models"
 	"github.com/dimk00z/go-shortener-praktikum/internal/settings"
+	"github.com/dimk00z/go-shortener-praktikum/internal/shortenererrors"
 	"github.com/dimk00z/go-shortener-praktikum/internal/storages/storageerrors"
 	"github.com/gofrs/uuid"
 	"github.com/jackc/pgconn"
@@ -88,12 +89,14 @@ type webResourse struct {
 	shortURL      string
 	counter       int
 	userID        string
+	isDeleted     bool
 }
 
 func (st *DataBaseStorage) GetByShortURL(requiredURL string) (URL string, err error) {
 	result := webResourse{}
 	err = st.db.QueryRow(getURLQuery, requiredURL).Scan(
-		&result.webResourseID, &result.URL, &result.shortURL, &result.counter, &result.userID)
+		&result.webResourseID, &result.URL, &result.shortURL,
+		&result.counter, &result.userID, &result.isDeleted)
 	if err != nil {
 		err = errors.New(requiredURL + " does not exist")
 		return
@@ -105,6 +108,9 @@ func (st *DataBaseStorage) GetByShortURL(requiredURL string) (URL string, err er
 		log.Println(err)
 	}
 	err = nil
+	if result.isDeleted {
+		err = shortenererrors.ErrURLDeleted
+	}
 	return
 }
 
@@ -198,6 +204,11 @@ func createTables(db *sql.DB, tables ...string) {
 			log.Println(err)
 		}
 	}
+}
+
+func (st *DataBaseStorage) DeleteBatch(batch models.BatchForDelete, user string) (err error) {
+	// TODO Add delete
+	return
 }
 
 func checkValueExists(db *sql.DB, table string, field string, value string) bool {

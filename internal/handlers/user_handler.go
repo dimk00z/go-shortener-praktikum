@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"encoding/json"
 	"log"
 	"net/http"
 
@@ -40,5 +41,23 @@ func (h UserHandler) GetUserURLs(w http.ResponseWriter, r *http.Request) {
 	}
 	log.Println(results)
 	util.JSONResponse(w, results, resultStatus)
+
+}
+
+func (h UserHandler) DeleteUserURLs(w http.ResponseWriter, r *http.Request) {
+
+	resultStatus := http.StatusAccepted
+	if err := util.RequestBodyCheck(w, r); err != nil {
+		return
+	}
+	// userIDCtx := r.Context().Value(cookie.UserIDCtxName).(string)
+	var shortURLs models.BatchForDelete
+	if err := json.NewDecoder(r.Body).Decode(&shortURLs); err != nil {
+		util.JSONError(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+	log.Println(shortURLs)
+	w.WriteHeader(resultStatus)
+	// TODO добавить удаление сюда!
 
 }

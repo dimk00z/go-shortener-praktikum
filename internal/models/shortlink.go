@@ -5,6 +5,7 @@ type BatchURLs []struct {
 	OriginalURL   string `json:"original_url"`
 	ShortURL      string `json:"-"`
 }
+type BatchForDelete []string
 
 type BatchShortURLs []struct {
 	CorrelationID string `json:"correlation_id"`

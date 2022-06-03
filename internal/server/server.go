@@ -68,6 +68,7 @@ func (s *ShortenerServer) MountHandlers(host string, st storageinterface.Storage
 			host,
 			st)
 		r.Get("/urls", userHandler.GetUserURLs)
+		r.Delete("/urls", userHandler.DeleteUserURLs)
 	})
 	dbRouter := chi.NewRouter()
 	dbRouter.Route("/", func(r chi.Router) {
