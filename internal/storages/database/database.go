@@ -206,8 +206,9 @@ func createTables(db *sql.DB, tables ...string) {
 	}
 }
 
-func (st *DataBaseStorage) DeleteBatch(batch models.BatchForDelete, user string) (err error) {
+func (st *DataBaseStorage) DeleteBatch(ctx context.Context, batch models.BatchForDelete, user string) (err error) {
 	// TODO Add delete
+	log.Println("deleted from DB")
 	return
 }
 

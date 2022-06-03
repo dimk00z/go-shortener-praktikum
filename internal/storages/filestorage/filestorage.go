@@ -154,7 +154,7 @@ func (st *FileStorage) GetUserURLs(user string) (result models.UserURLs, err err
 	return
 }
 
-func (st *FileStorage) DeleteBatch(batch models.BatchForDelete, user string) (err error) {
+func (st *FileStorage) DeleteBatch(ctx context.Context, batch models.BatchForDelete, user string) (err error) {
 	for _, shortURL := range batch {
 		w := st.ShortURLs[shortURL]
 		w.IsDeleted = false

@@ -106,7 +106,8 @@ func (st *URLStorage) SaveBatch(
 	return result, err
 }
 
-func (st *URLStorage) DeleteBatch(batch models.BatchForDelete, user string) (err error) {
+func (st *URLStorage) DeleteBatch(ctx context.Context,
+	batch models.BatchForDelete, user string) (err error) {
 	for _, shortURL := range batch {
 		w := st.ShortURLs[shortURL]
 		w.isDeleted = false

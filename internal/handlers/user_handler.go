@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"context"
 	"encoding/json"
 	"log"
 	"net/http"
@@ -50,7 +51,7 @@ func (h UserHandler) DeleteUserURLs(w http.ResponseWriter, r *http.Request) {
 	if err := util.RequestBodyCheck(w, r); err != nil {
 		return
 	}
-	// userIDCtx := r.Context().Value(cookie.UserIDCtxName).(string)
+	userIDCtx := r.Context().Value(cookie.UserIDCtxName).(string)
 	var shortURLs models.BatchForDelete
 	if err := json.NewDecoder(r.Body).Decode(&shortURLs); err != nil {
 		util.JSONError(w, err.Error(), http.StatusBadRequest)
@@ -58,6 +59,11 @@ func (h UserHandler) DeleteUserURLs(w http.ResponseWriter, r *http.Request) {
 	}
 	log.Println(shortURLs)
 	w.WriteHeader(resultStatus)
-	// TODO добавить удаление сюда!
 
+	// TODO добавить удаление сюда!
+	ctx := context.Background()
+	err := h.Storage.DeleteBatch(ctx, shortURLs, userIDCtx)
+	if err != nil {
+		log.Println(err)
+	}
 }
