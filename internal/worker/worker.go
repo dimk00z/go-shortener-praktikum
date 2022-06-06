@@ -28,6 +28,7 @@ func doWorkersTask(ctx context.Context,
 	workerIndex int,
 	wg *sync.WaitGroup,
 	taskCh chan func(ctx context.Context) error) {
+	defer wg.Done()
 	log.Printf("worker %v started\n", workerIndex)
 workerLoop:
 	for {
@@ -41,7 +42,6 @@ workerLoop:
 			}
 		}
 	}
-	wg.Done()
 }
 
 func (wp *WorkersPool) Run(ctx context.Context) {
