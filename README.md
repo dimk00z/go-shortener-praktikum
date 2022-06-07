@@ -30,3 +30,5 @@ git fetch template && git checkout template/main .github
 cp .env_example .env
 docker-compose up
 ```
+Пример запуска с БД `go run main.go -d "postgres://admin:password@localhost:5432/shortener_db"`
+Пример запуска с файловым хранилищем `go run main.go -f "storage.json"`
