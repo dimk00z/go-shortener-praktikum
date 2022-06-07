@@ -29,7 +29,8 @@ type SecurityConfig struct {
 	SecretKey string `env:"SECRET_KEY" envDefault:"SECRET_KEY"`
 }
 type WorkersConfig struct {
-	WorkersNumber int `env:"WORKERS_NUMBER" envDefault:"10"`
+	// TODO FIX numbers
+	WorkersNumber int `env:"WORKERS_NUMBER" envDefault:"5"`
 	PoolLength    int `env:"POOL_LENGTH" envDefault:"10"`
 }
 type Config struct {

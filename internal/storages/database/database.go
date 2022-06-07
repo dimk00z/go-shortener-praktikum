@@ -17,6 +17,7 @@ import (
 	"github.com/jackc/pgconn"
 	"github.com/jackc/pgerrcode"
 	_ "github.com/jackc/pgx/v4/stdlib"
+	"github.com/lib/pq"
 )
 
 type DataBaseStorage struct {
@@ -207,8 +208,28 @@ func createTables(db *sql.DB, tables ...string) {
 }
 
 func (st *DataBaseStorage) DeleteBatch(ctx context.Context, batch models.BatchForDelete, user string) (err error) {
-	// TODO Add delete
-	log.Println("deleted from DB")
+	tx, err := st.db.Begin()
+	if err != nil {
+		log.Println(err)
+		return
+	}
+	defer func(tx *sql.Tx) {
+		err := tx.Rollback()
+		log.Println(err)
+	}(tx)
+	stmt, err := tx.PrepareContext(ctx, batchUpdate)
+	defer func(stmt *sql.Stmt) {
+		err := stmt.Close()
+		if err != nil {
+			log.Println("Close statement error")
+		}
+	}(stmt)
+	if _, err = stmt.ExecContext(
+		ctx, pq.Array(batch), user); err != nil {
+		log.Println(err)
+	}
+	err = tx.Commit()
+	log.Println("deleted from DB", batch)
 	return
 }
 

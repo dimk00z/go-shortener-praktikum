@@ -12,24 +12,22 @@ import (
 	"github.com/dimk00z/go-shortener-praktikum/internal/middleware/cookie"
 	"github.com/dimk00z/go-shortener-praktikum/internal/middleware/decompressor"
 	"github.com/dimk00z/go-shortener-praktikum/internal/storages/storageinterface"
+	"github.com/dimk00z/go-shortener-praktikum/internal/worker"
 	"github.com/go-chi/chi"
 	"github.com/go-chi/chi/middleware"
 )
 
-// type Handler interface {
-// 	HandlePOSTRequest(w http.ResponseWriter, r *http.Request)
-// 	HandleGETRequest(w http.ResponseWriter, r *http.Request)
-// }
-
 type ShortenerServer struct {
 	port   string
 	Router *chi.Mux
+	wp     worker.IWorkerPool
 }
 
-func NewServer(port string) *ShortenerServer {
+func NewServer(port string, wp worker.IWorkerPool) *ShortenerServer {
 	return &ShortenerServer{
 		port:   port,
 		Router: chi.NewRouter(),
+		wp:     wp,
 	}
 }
 func (s *ShortenerServer) MountHandlers(host string, st storageinterface.Storage) {
@@ -66,7 +64,9 @@ func (s *ShortenerServer) MountHandlers(host string, st storageinterface.Storage
 	userRouter.Route("/", func(r chi.Router) {
 		userHandler := handlers.NewUserHandler(
 			host,
-			st)
+			st,
+			s.wp,
+		)
 		r.Get("/urls", userHandler.GetUserURLs)
 		r.Delete("/urls", userHandler.DeleteUserURLs)
 	})
@@ -98,8 +98,8 @@ func (s ShortenerServer) RunServer(ctx context.Context, cancel context.CancelFun
 	select {
 	case killSignal := <-interrupt:
 		log.Print("Got ", killSignal)
+		cancel()
 	case <-ctx.Done():
 	}
-	storage.Close()
 	log.Print("Server closed")
 }

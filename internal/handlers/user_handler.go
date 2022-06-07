@@ -10,17 +10,20 @@ import (
 	"github.com/dimk00z/go-shortener-praktikum/internal/models"
 	"github.com/dimk00z/go-shortener-praktikum/internal/storages/storageinterface"
 	"github.com/dimk00z/go-shortener-praktikum/internal/util"
+	"github.com/dimk00z/go-shortener-praktikum/internal/worker"
 )
 
 type UserHandler struct {
 	Storage storageinterface.Storage
 	host    string
+	wp      worker.IWorkerPool
 }
 
-func NewUserHandler(host string, st storageinterface.Storage) *UserHandler {
+func NewUserHandler(host string, st storageinterface.Storage, wp worker.IWorkerPool) *UserHandler {
 	return &UserHandler{
 		Storage: st,
 		host:    host,
+		wp:      wp,
 	}
 }
 
@@ -58,12 +61,12 @@ func (h UserHandler) DeleteUserURLs(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	log.Println(shortURLs)
+
+	// TODO проверить удаление удаление сюда!
+	deleteBatchTask := func(ctx context.Context) error {
+		return h.Storage.DeleteBatch(ctx, shortURLs, userIDCtx)
+	}
+	h.wp.Push(deleteBatchTask)
 	w.WriteHeader(resultStatus)
 
-	// TODO добавить удаление сюда!
-	ctx := context.Background()
-	err := h.Storage.DeleteBatch(ctx, shortURLs, userIDCtx)
-	if err != nil {
-		log.Println(err)
-	}
 }

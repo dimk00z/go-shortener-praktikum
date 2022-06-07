@@ -89,3 +89,9 @@ SET
 WHERE
     web_resourse_id = $2;
 `
+
+const batchUpdate = `
+UPDATE public.web_resourse
+SET is_deleted = TRUE
+WHERE short_url = any ($1) AND user_id=$2;
+`
