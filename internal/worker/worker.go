@@ -12,10 +12,10 @@ type WorkersPool struct {
 	done          chan struct{}
 }
 
-func NewWorkersPool(workersNumber int, poolLegth int) *WorkersPool {
+func NewWorkersPool(workersNumber int, poolLength int) *WorkersPool {
 	return &WorkersPool{
 		workersNumber: workersNumber,
-		inputCh:       make(chan func(ctx context.Context) error, poolLegth),
+		inputCh:       make(chan func(ctx context.Context) error, poolLength),
 		done:          make(chan struct{}),
 	}
 }

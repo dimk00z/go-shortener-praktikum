@@ -28,10 +28,15 @@ type StorageConfig struct {
 type SecurityConfig struct {
 	SecretKey string `env:"SECRET_KEY" envDefault:"SECRET_KEY"`
 }
+type WorkersConfig struct {
+	WorkersNumber int `env:"WORKERS_NUMBER" envDefault:"10"`
+	PoolLength    int `env:"POOL_LENGTH" envDefault:"10"`
+}
 type Config struct {
 	Server   ServerConfig
 	Storage  StorageConfig
 	Security SecurityConfig
+	Workers  WorkersConfig
 }
 
 func (c *Config) checkFlags() {
@@ -74,7 +79,9 @@ func LoadConfig() Config {
 		if err := env.Parse(&currentConfig.Security); err != nil {
 			log.Printf("%+v\n", err)
 		}
-
+		if err := env.Parse(&currentConfig.Workers); err != nil {
+			log.Printf("%+v\n", err)
+		}
 		currentConfig.checkFlags()
 	})
 	return currentConfig
