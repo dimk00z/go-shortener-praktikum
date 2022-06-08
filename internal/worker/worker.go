@@ -39,7 +39,7 @@ func (wp *WorkersPool) Push(task func(ctx context.Context) error) {
 
 func doTasksByWorkers(ctx context.Context,
 	workerIndex int,
-	taskCh chan func(ctx context.Context) error) {
+	taskCh chan func(ctx context.Context) error) error {
 	log.Printf("worker_%v started\n", workerIndex)
 workerLoop:
 	for {
@@ -51,11 +51,13 @@ workerLoop:
 			log.Printf("worker_%v is busy\n", workerIndex)
 			if err := workerTask(ctx); err != nil {
 				log.Printf("worker_%v got error:%s", workerIndex, err.Error())
+				return err
 			} else {
 				log.Printf("worker %v finished task correctly", workerIndex)
 			}
 		}
 	}
+	return nil
 }
 
 func (wp *WorkersPool) Run(ctx context.Context) {
@@ -63,8 +65,7 @@ func (wp *WorkersPool) Run(ctx context.Context) {
 	for workerIndex := 0; workerIndex < wp.workersNumber; workerIndex++ {
 		workerIndex := workerIndex
 		g.Go(func() error {
-			doTasksByWorkers(ctx, workerIndex, wp.inputCh)
-			return nil
+			return doTasksByWorkers(ctx, workerIndex, wp.inputCh)
 		})
 	}
 	if err := g.Wait(); err != nil {
