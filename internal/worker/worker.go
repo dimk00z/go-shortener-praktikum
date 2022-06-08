@@ -6,6 +6,7 @@ import (
 	"sync"
 
 	"github.com/dimk00z/go-shortener-praktikum/internal/settings"
+	"golang.org/x/sync/errgroup"
 )
 
 type IWorkerPool interface {
@@ -38,9 +39,9 @@ func (wp *WorkersPool) Push(task func(ctx context.Context) error) {
 
 func doTasksByWorkers(ctx context.Context,
 	workerIndex int,
-	wg *sync.WaitGroup,
+	// wg *sync.WaitGroup,
 	taskCh chan func(ctx context.Context) error) {
-	defer wg.Done()
+	// defer wg.Done()
 	log.Printf("worker_%v started\n", workerIndex)
 workerLoop:
 	for {
@@ -60,12 +61,17 @@ workerLoop:
 }
 
 func (wp *WorkersPool) Run(ctx context.Context) {
-	wg := &sync.WaitGroup{}
+	g, ctx := errgroup.WithContext(ctx)
 	for workerIndex := 0; workerIndex < wp.workersNumber; workerIndex++ {
-		wg.Add(1)
-		go doTasksByWorkers(ctx, workerIndex, wg, wp.inputCh)
+		workerIndex := workerIndex
+		g.Go(func() error {
+			doTasksByWorkers(ctx, workerIndex, wp.inputCh)
+			return nil
+		})
 	}
-	wg.Wait()
+	if err := g.Wait(); err != nil {
+		log.Println(err)
+	}
 	close(wp.inputCh)
 }
 
