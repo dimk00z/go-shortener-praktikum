@@ -39,9 +39,7 @@ func (wp *WorkersPool) Push(task func(ctx context.Context) error) {
 
 func doTasksByWorkers(ctx context.Context,
 	workerIndex int,
-	// wg *sync.WaitGroup,
 	taskCh chan func(ctx context.Context) error) {
-	// defer wg.Done()
 	log.Printf("worker_%v started\n", workerIndex)
 workerLoop:
 	for {
