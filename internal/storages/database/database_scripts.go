@@ -13,6 +13,7 @@ CREATE TABLE IF NOT EXISTS "public"."web_resourse" (
     url varchar(300) NOT NULL,
     short_url varchar(50) NOT NULL,
     counter integer,
+    is_deleted boolean DEFAULT FALSE,
     user_id uuid NOT NULL,
     CONSTRAINT web_resourse_pkey PRIMARY KEY (web_resourse_id),
     CONSTRAINT user_id_url UNIQUE (user_id, url),
@@ -64,7 +65,8 @@ SELECT
     url,
     short_url,
     counter,
-    user_id
+    user_id,
+    is_deleted
 FROM
     public.web_resourse
 WHERE
@@ -86,4 +88,10 @@ SET
     counter = $1
 WHERE
     web_resourse_id = $2;
+`
+
+const batchUpdate = `
+UPDATE public.web_resourse
+SET is_deleted = TRUE
+WHERE short_url = any ($1) AND user_id=$2;
 `

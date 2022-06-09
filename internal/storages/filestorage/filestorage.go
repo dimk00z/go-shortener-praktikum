@@ -8,12 +8,14 @@ import (
 	"os"
 
 	"github.com/dimk00z/go-shortener-praktikum/internal/models"
+	"github.com/dimk00z/go-shortener-praktikum/internal/shortenererrors"
 	"github.com/dimk00z/go-shortener-praktikum/internal/storages/storageerrors"
 )
 
 type webResourse struct {
-	URL     string `json:"url"`
-	Counter int32  `json:"counter"`
+	URL       string `json:"url"`
+	Counter   int32  `json:"counter"`
+	IsDeleted bool   `json:"is_deleted"`
 }
 
 type UserURL struct {
@@ -58,8 +60,9 @@ func (st *FileStorage) SaveURL(URL string, shortURL string, userID string) (err 
 		return storageerrors.ErrURLAlreadySave
 	}
 	wb := webResourse{
-		URL:     URL,
-		Counter: 0,
+		URL:       URL,
+		Counter:   0,
+		IsDeleted: false,
 	}
 	st.ShortURLs[shortURL] = wb
 	log.Println(shortURL, st.ShortURLs[shortURL])
@@ -99,12 +102,14 @@ func (st *FileStorage) GetByShortURL(requiredURL string) (URL string, err error)
 		st.ShortURLs[requiredURL] = webResourse
 
 		log.Println(st.ShortURLs[requiredURL])
-
-		return webResourse.URL, nil
-	} else {
-		err = errors.New(requiredURL + " does not exist")
-		return
+		if webResourse.IsDeleted {
+			err = shortenererrors.ErrURLDeleted
+		}
+		return webResourse.URL, err
 	}
+	err = errors.New(requiredURL + " does not exist")
+	return
+
 }
 func (st *FileStorage) updateFile() error {
 	file, err := os.OpenFile(st.fileName, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0644)
@@ -146,5 +151,18 @@ func (st *FileStorage) GetUserURLs(user string) (result models.UserURLs, err err
 
 	log.Println(user, result)
 
+	return
+}
+
+func (st *FileStorage) DeleteBatch(ctx context.Context, batch models.BatchForDelete, user string) (err error) {
+	for _, shortURL := range batch {
+		w := st.ShortURLs[shortURL]
+		w.IsDeleted = true
+		st.ShortURLs[shortURL] = w
+	}
+	err = st.updateFile()
+	if err != nil {
+		log.Println(err)
+	}
 	return
 }

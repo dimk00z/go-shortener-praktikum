@@ -6,12 +6,14 @@ import (
 	"log"
 
 	"github.com/dimk00z/go-shortener-praktikum/internal/models"
+	"github.com/dimk00z/go-shortener-praktikum/internal/shortenererrors"
 	"github.com/dimk00z/go-shortener-praktikum/internal/storages/storageerrors"
 )
 
 type webResourse struct {
-	URL     string
-	counter int32
+	URL       string
+	counter   int32
+	isDeleted bool
 }
 
 type UserURL struct {
@@ -37,8 +39,9 @@ func (st *URLStorage) SaveURL(URL string, shortURL string, userID string) (err e
 		return storageerrors.ErrURLAlreadySave
 	}
 	st.ShortURLs[shortURL] = webResourse{
-		URL:     URL,
-		counter: 0}
+		URL:       URL,
+		counter:   0,
+		isDeleted: false}
 	log.Println(shortURL, st.ShortURLs[shortURL])
 	if _, ok := st.UsersData[userID]; !ok {
 		st.UsersData[userID] = make([]UserURL, 0)
@@ -57,12 +60,14 @@ func (st *URLStorage) GetByShortURL(requiredURL string) (URL string, err error) 
 		st.ShortURLs[requiredURL] = webResourse
 
 		log.Println(st.ShortURLs[requiredURL])
-
-		return webResourse.URL, nil
-	} else {
-		err = errors.New(requiredURL + " does not exist")
-		return
+		if webResourse.isDeleted {
+			err = shortenererrors.ErrURLDeleted
+		}
+		return webResourse.URL, err
 	}
+	err = shortenererrors.ErrURLNotFound
+	return
+
 }
 
 func (st *URLStorage) Close() error {
@@ -99,4 +104,14 @@ func (st *URLStorage) SaveBatch(
 		result[index].ShortURL = row.ShortURL
 	}
 	return result, err
+}
+
+func (st *URLStorage) DeleteBatch(ctx context.Context,
+	batch models.BatchForDelete, user string) (err error) {
+	for _, shortURL := range batch {
+		w := st.ShortURLs[shortURL]
+		w.isDeleted = false
+		st.ShortURLs[shortURL] = w
+	}
+	return
 }

@@ -11,8 +11,10 @@ import (
 	"testing"
 
 	"github.com/dimk00z/go-shortener-praktikum/internal/server"
+	"github.com/dimk00z/go-shortener-praktikum/internal/settings"
 	"github.com/dimk00z/go-shortener-praktikum/internal/storages/memorystorage"
 	"github.com/dimk00z/go-shortener-praktikum/internal/util"
+	"github.com/dimk00z/go-shortener-praktikum/internal/worker"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -61,9 +63,10 @@ func TestShortenerAPIHandler_PostEndpoint(t *testing.T) {
 			contentType: contentType,
 		},
 	})
-
+	wp := worker.GetWorkersPool(settings.WorkersConfig{WorkersNumber: 2, PoolLength: 10})
+	defer wp.Close()
 	server := server.NewServer(
-		shortenerPort)
+		shortenerPort, wp)
 	server.MountHandlers(host, mockStorage)
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {

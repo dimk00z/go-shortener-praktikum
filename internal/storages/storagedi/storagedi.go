@@ -15,7 +15,7 @@ var (
 	once sync.Once
 )
 
-func GetStorage(storageConfig settings.StorageConfig) (st storageinterface.Storage) {
+func GetStorage(storageConfig settings.StorageConfig) storageinterface.Storage {
 	once.Do(func() {
 		storageConfig := settings.LoadConfig().Storage
 		if storageConfig.DBStorage.DataSourceName != "" {

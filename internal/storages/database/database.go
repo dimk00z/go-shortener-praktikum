@@ -11,11 +11,13 @@ import (
 	"github.com/cenkalti/backoff"
 	"github.com/dimk00z/go-shortener-praktikum/internal/models"
 	"github.com/dimk00z/go-shortener-praktikum/internal/settings"
+	"github.com/dimk00z/go-shortener-praktikum/internal/shortenererrors"
 	"github.com/dimk00z/go-shortener-praktikum/internal/storages/storageerrors"
 	"github.com/gofrs/uuid"
 	"github.com/jackc/pgconn"
 	"github.com/jackc/pgerrcode"
 	_ "github.com/jackc/pgx/v4/stdlib"
+	"github.com/lib/pq"
 )
 
 type DataBaseStorage struct {
@@ -88,12 +90,18 @@ type webResourse struct {
 	shortURL      string
 	counter       int
 	userID        string
+	isDeleted     bool
 }
 
 func (st *DataBaseStorage) GetByShortURL(requiredURL string) (URL string, err error) {
 	result := webResourse{}
 	err = st.db.QueryRow(getURLQuery, requiredURL).Scan(
-		&result.webResourseID, &result.URL, &result.shortURL, &result.counter, &result.userID)
+		&result.webResourseID,
+		&result.URL,
+		&result.shortURL,
+		&result.counter,
+		&result.userID,
+		&result.isDeleted)
 	if err != nil {
 		err = errors.New(requiredURL + " does not exist")
 		return
@@ -105,6 +113,9 @@ func (st *DataBaseStorage) GetByShortURL(requiredURL string) (URL string, err er
 		log.Println(err)
 	}
 	err = nil
+	if result.isDeleted {
+		err = shortenererrors.ErrURLDeleted
+	}
 	return
 }
 
@@ -198,6 +209,32 @@ func createTables(db *sql.DB, tables ...string) {
 			log.Println(err)
 		}
 	}
+}
+
+func (st *DataBaseStorage) DeleteBatch(ctx context.Context, batch models.BatchForDelete, user string) (err error) {
+	tx, err := st.db.Begin()
+	if err != nil {
+		log.Println(err)
+		return
+	}
+	defer func(tx *sql.Tx) {
+		err := tx.Rollback()
+		log.Println(err)
+	}(tx)
+	stmt, err := tx.PrepareContext(ctx, batchUpdate)
+	defer func(stmt *sql.Stmt) {
+		err := stmt.Close()
+		if err != nil {
+			log.Println("Close statement error")
+		}
+	}(stmt)
+	if _, err = stmt.ExecContext(
+		ctx, pq.Array(batch), user); err != nil {
+		log.Println(err)
+	}
+	err = tx.Commit()
+	log.Println("deleted from DB", batch)
+	return
 }
 
 func checkValueExists(db *sql.DB, table string, field string, value string) bool {
