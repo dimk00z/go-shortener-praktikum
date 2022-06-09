@@ -96,8 +96,12 @@ type webResourse struct {
 func (st *DataBaseStorage) GetByShortURL(requiredURL string) (URL string, err error) {
 	result := webResourse{}
 	err = st.db.QueryRow(getURLQuery, requiredURL).Scan(
-		&result.webResourseID, &result.URL, &result.shortURL,
-		&result.counter, &result.userID, &result.isDeleted)
+		&result.webResourseID,
+		&result.URL,
+		&result.shortURL,
+		&result.counter,
+		&result.userID,
+		&result.isDeleted)
 	if err != nil {
 		err = errors.New(requiredURL + " does not exist")
 		return
