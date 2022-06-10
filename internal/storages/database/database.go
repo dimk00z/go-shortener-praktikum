@@ -20,12 +20,12 @@ import (
 	"github.com/lib/pq"
 )
 
-type DataBaseStorage struct {
+type Storage struct {
 	db *sql.DB
 }
 
-func NewDataBaseStorage(dbConfig settings.DBStorageConfig) *DataBaseStorage {
-	st := &DataBaseStorage{}
+func NewDataBaseStorage(dbConfig settings.DBStorageConfig) *Storage {
+	st := &Storage{}
 	b := backoff.WithMaxRetries(backoff.NewExponentialBackOff(), uint64(dbConfig.MaxRetries))
 	operation := func() error {
 		log.Println("Trying to connect to DB")
@@ -49,7 +49,7 @@ func NewDataBaseStorage(dbConfig settings.DBStorageConfig) *DataBaseStorage {
 	return st
 }
 
-func (st *DataBaseStorage) Close() (err error) {
+func (st *Storage) Close() (err error) {
 	err = st.db.Close()
 	if err != nil {
 		log.Println(err)
@@ -59,7 +59,7 @@ func (st *DataBaseStorage) Close() (err error) {
 	return
 }
 
-func (st *DataBaseStorage) GetUserURLs(user string) (result models.UserURLs, err error) {
+func (st *Storage) GetUserURLs(user string) (result models.UserURLs, err error) {
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 	rows, err := st.db.QueryContext(ctx, getUserURLsQuery, user)
@@ -67,7 +67,11 @@ func (st *DataBaseStorage) GetUserURLs(user string) (result models.UserURLs, err
 		log.Println(err)
 		return
 	}
-	defer rows.Close()
+	defer func() {
+		if err := rows.Close(); err != nil {
+			log.Println(err.Error())
+		}
+	}()
 
 	for rows.Next() {
 		var res models.UserURL
@@ -93,7 +97,7 @@ type webResource struct {
 	isDeleted     bool
 }
 
-func (st *DataBaseStorage) GetByShortURL(requiredURL string) (URL string, err error) {
+func (st *Storage) GetByShortURL(requiredURL string) (URL string, err error) {
 	result := webResource{}
 	err = st.db.QueryRow(getURLQuery, requiredURL).Scan(
 		&result.webResourceID,
@@ -119,7 +123,7 @@ func (st *DataBaseStorage) GetByShortURL(requiredURL string) (URL string, err er
 	return
 }
 
-func (st *DataBaseStorage) saveUser(userID string) {
+func (st *Storage) saveUser(userID string) {
 	if !checkValueExists(st.db, "user", "user_id", userID) {
 		_, err := st.db.Exec(insertUserQuery, userID)
 		if err != nil {
@@ -128,7 +132,7 @@ func (st *DataBaseStorage) saveUser(userID string) {
 	}
 }
 
-func (st *DataBaseStorage) SaveURL(URL string, shortURL string, userID string) (err error) {
+func (st *Storage) SaveURL(URL string, shortURL string, userID string) (err error) {
 	st.saveUser(userID)
 	webResourceUUID, err := uuid.NewV4()
 	if err != nil {
@@ -149,7 +153,7 @@ func (st *DataBaseStorage) SaveURL(URL string, shortURL string, userID string) (
 	return
 }
 
-func (st *DataBaseStorage) SaveBatch(
+func (st *Storage) SaveBatch(
 	batch models.BatchURLs,
 	userID string) (result models.BatchShortURLs, err error) {
 	st.saveUser(userID)
@@ -199,7 +203,7 @@ func (st *DataBaseStorage) SaveBatch(
 	return
 }
 
-func (st *DataBaseStorage) CheckConnection(ctx context.Context) error {
+func (st *Storage) CheckConnection(ctx context.Context) error {
 	return st.db.PingContext(ctx)
 }
 
@@ -211,7 +215,7 @@ func createTables(db *sql.DB, tables ...string) {
 	}
 }
 
-func (st *DataBaseStorage) DeleteBatch(ctx context.Context, batch models.BatchForDelete, user string) (err error) {
+func (st *Storage) DeleteBatch(ctx context.Context, batch models.BatchForDelete, user string) (err error) {
 	tx, err := st.db.Begin()
 	if err != nil {
 		log.Println(err)

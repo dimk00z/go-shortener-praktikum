@@ -45,7 +45,11 @@ func (st *FileStorage) load() {
 	if err != nil {
 		log.Panicln(err)
 	}
-	defer file.Close()
+	defer func() {
+		if err := file.Close(); err != nil {
+			log.Println(err.Error())
+		}
+	}()
 	decoder := json.NewDecoder(file)
 	if err := decoder.Decode(&st); err != nil {
 		log.Println(err)
@@ -87,7 +91,11 @@ func (st *FileStorage) SaveBatch(
 	user string) (result models.BatchShortURLs, err error) {
 	result = make(models.BatchShortURLs, len(batch))
 	for index, row := range batch {
-		st.SaveURL(row.OriginalURL, row.ShortURL, user)
+		if err := st.SaveURL(row.OriginalURL, row.ShortURL, user); err != nil {
+			log.Println(err.Error())
+
+		}
+
 		result[index].CorrelationID = row.CorrelationID
 		result[index].ShortURL = row.ShortURL
 	}
@@ -117,11 +125,19 @@ func (st *FileStorage) updateFile() error {
 		log.Println(err)
 		return err
 	}
-	defer file.Close()
+	defer func() {
+		if err := file.Close(); err != nil {
+			log.Println(err.Error())
+		}
+	}()
 	encoder := json.NewEncoder(file)
 	encoder.SetEscapeHTML(false)
-	encoder.Encode(&st)
+	err = encoder.Encode(&st)
+	if err != nil {
+		log.Println(err)
+	}
 	err = file.Sync()
+
 	if err != nil {
 		log.Println(err)
 	}
@@ -129,7 +145,7 @@ func (st *FileStorage) updateFile() error {
 }
 func (st *FileStorage) Close() (err error) {
 	err = st.updateFile()
-	log.Println("Filestorage closed correctly")
+	log.Println("FileStorage closed correctly")
 
 	return err
 }

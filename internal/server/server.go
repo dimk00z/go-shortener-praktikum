@@ -36,7 +36,7 @@ func (s *ShortenerServer) MountHandlers(host string, st storageinterface.Storage
 	s.Router.Use(middleware.Logger)
 	s.Router.Use(middleware.Recoverer)
 	s.Router.Use(decompressor.DecompressHandler)
-	s.Router.Use(cookie.CookieHandler)
+	s.Router.Use(cookie.Handler)
 
 	s.Router.Use(middleware.Compress(5))
 
@@ -84,7 +84,7 @@ func (s *ShortenerServer) MountHandlers(host string, st storageinterface.Storage
 	s.Router.Mount("/ping", dbRouter)
 }
 
-func (s ShortenerServer) RunServer(ctx context.Context, cancel context.CancelFunc, storage storageinterface.Storage) {
+func (s ShortenerServer) RunServer(ctx context.Context, cancel context.CancelFunc) {
 	interrupt := make(chan os.Signal, 1)
 	signal.Notify(interrupt, os.Interrupt, syscall.SIGTERM)
 	go func() {

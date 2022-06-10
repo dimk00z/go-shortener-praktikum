@@ -3,6 +3,7 @@ package handlers_test
 import (
 	"fmt"
 	"io"
+	"log"
 	"net/http"
 	"net/http/httptest"
 	"reflect"
@@ -63,19 +64,23 @@ func TestRootHandler_GetEndpoint(t *testing.T) {
 		},
 	})
 	wp := worker.GetWorkersPool(settings.WorkersConfig{WorkersNumber: 2, PoolLength: 10})
-	server := server.NewServer(
+	srv := server.NewServer(
 		shortenerPort, wp)
-	server.MountHandlers(host, mockStorage)
+	srv.MountHandlers(host, mockStorage)
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			request := httptest.NewRequest(http.MethodGet, "/"+tt.shortURL, nil)
-			response := executeRequest(request, server)
+			response := executeRequest(request, srv)
 			// check status code
 			assert.Equal(t, tt.want.code, response.StatusCode, "wrong answer code")
 
 			// check Location in header
 			assert.Equal(t, tt.want.locationHeader, response.Header.Get("Location"), "wrong answer code")
-			defer response.Body.Close()
+			defer func() {
+				if err := response.Body.Close(); err != nil {
+					log.Println(err.Error())
+				}
+			}()
 		})
 	}
 }
@@ -121,14 +126,14 @@ func TestRootHandler_PostEndpoint(t *testing.T) {
 	})
 
 	wp := worker.GetWorkersPool(settings.WorkersConfig{WorkersNumber: 2, PoolLength: 10})
-	server := server.NewServer(
+	srv := server.NewServer(
 		shortenerPort, wp)
-	server.MountHandlers(host, mockStorage)
+	srv.MountHandlers(host, mockStorage)
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			body := strings.NewReader(tt.URL)
 			request := httptest.NewRequest(http.MethodPost, "/", body)
-			response := executeRequest(request, server)
+			response := executeRequest(request, srv)
 			// check status code
 			resBody, err := io.ReadAll(response.Body)
 			if err != nil {
@@ -140,8 +145,11 @@ func TestRootHandler_PostEndpoint(t *testing.T) {
 
 			assert.Equal(t, tt.want.contentType, response.Header.Get("Content-Type"), "wrong content-type")
 
-			defer response.Body.Close()
-
+			defer func() {
+				if err := response.Body.Close(); err != nil {
+					log.Println(err.Error())
+				}
+			}()
 		})
 	}
 }

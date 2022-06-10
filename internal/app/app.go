@@ -17,15 +17,18 @@ func StartApp() {
 	host := config.Server.Host
 	wp := worker.GetWorkersPool(config.Workers)
 	defer wp.Close()
-	server := server.NewServer(config.Server.Port, wp)
+	srv := server.NewServer(config.Server.Port, wp)
 	storage := storagedi.GetStorage(config.Storage)
-	defer storage.Close()
-
-	server.MountHandlers(host, storage)
+	defer func() {
+		if err := storage.Close(); err != nil {
+			log.Println(err.Error())
+		}
+	}()
+	srv.MountHandlers(host, storage)
 	ctx, cancel := context.WithCancel(context.Background())
 
 	go func() {
 		wp.Run(ctx)
 	}()
-	server.RunServer(ctx, cancel, storage)
+	srv.RunServer(ctx, cancel)
 }
