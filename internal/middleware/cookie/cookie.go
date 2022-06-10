@@ -23,7 +23,7 @@ const (
 	UserIDCtxName        ContextType = "ctxUserId"
 )
 
-func CookieHandler(next http.Handler) http.Handler {
+func Handler(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		cookieUserID := util.GetCookieParam(cookieUserIDField, r)
 		log.Println(cookieUserID)

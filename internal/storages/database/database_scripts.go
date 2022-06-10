@@ -7,16 +7,16 @@ CREATE TABLE IF NOT EXISTS "public"."user" (
 );
 `
 
-const createWebResourseTableQuery = `
-CREATE TABLE IF NOT EXISTS "public"."web_resourse" (
-    web_resourse_id uuid NOT NULL,
+const createWebResourceTableQuery = `
+CREATE TABLE IF NOT EXISTS "public"."web_Resource" (
+    web_Resource_id uuid NOT NULL,
     url varchar(300) NOT NULL,
     short_url varchar(50) NOT NULL,
     counter integer,
     user_id uuid NOT NULL,
-    CONSTRAINT web_resourse_pkey PRIMARY KEY (web_resourse_id),
+    CONSTRAINT web_Resource_pkey PRIMARY KEY (web_Resource_id),
     CONSTRAINT user_id_url UNIQUE (user_id, url),
-    CONSTRAINT fk_web_resourse_user FOREIGN KEY (user_id) REFERENCES public."user" (user_id) MATCH SIMPLE ON UPDATE CASCADE ON DELETE CASCADE
+    CONSTRAINT fk_web_Resource_user FOREIGN KEY (user_id) REFERENCES public."user" (user_id) MATCH SIMPLE ON UPDATE CASCADE ON DELETE CASCADE
 );`
 
 const insertUserQuery = `
@@ -24,10 +24,10 @@ const insertUserQuery = `
  		"public"."user" (user_id)
 	VALUES ($1);`
 
-const insertWebResourseQuery = `
+const insertWebResourceQuery = `
 INSERT INTO
-    public.web_resourse(
-        web_resourse_id,
+    public.web_Resource(
+        web_Resource_id,
         url,
         short_url,
         counter,
@@ -36,10 +36,10 @@ INSERT INTO
 VALUES
     ($1, $2, $3, $4, $5);
 `
-const insertWebResourseBatchQuery = `
+const insertWebResourceBatchQuery = `
 INSERT INTO
-    public.web_resourse(
-        web_resourse_id,
+    public.web_Resource(
+        web_Resource_id,
         url,
         short_url,
         counter,
@@ -60,13 +60,13 @@ const checkValueExistsQuery = `
 
 const getURLQuery = `
 SELECT
-    web_resourse_id,
+    web_Resource_id,
     url,
     short_url,
     counter,
     user_id
 FROM
-    public.web_resourse
+    public.web_Resource
 WHERE
     short_url = $1;
 `
@@ -75,15 +75,15 @@ SELECT
     url,
     short_url
 FROM
-    public.web_resourse
+    public.web_Resource
 WHERE
     user_id = $1;
 `
 const updateCounterQuery = `
 UPDATE
-    public.web_resourse
+    public.web_Resource
 SET
     counter = $1
 WHERE
-    web_resourse_id = $2;
+    web_Resource_id = $2;
 `

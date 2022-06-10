@@ -3,6 +3,7 @@ package handlers_test
 import (
 	"fmt"
 	"io"
+	"log"
 	"net/http"
 	"net/http/httptest"
 	"reflect"
@@ -36,13 +37,13 @@ func TestShortenerAPIHandler_PostEndpoint(t *testing.T) {
 	contentType := "application/json; charset=utf-8"
 
 	rStorage := reflect.ValueOf(mockStorage).Interface().(*memorystorage.URLStorage)
-	for shortURL, webResourse := range rStorage.ShortURLs {
+	for shortURL, webResource := range rStorage.ShortURLs {
 		tests = append(tests, test{
 			name: nameTest + strconv.Itoa(testIndex),
-			URL:  webResourse.URL,
+			URL:  webResource.URL,
 			want: want{
 				code: http.StatusConflict,
-				result: util.StuctEncode(struct {
+				result: util.StructEncode(struct {
 					Result string `json:"result"`
 				}{Result: fmt.Sprintf("%s/%s", host, shortURL)}),
 				contentType: contentType,
@@ -55,25 +56,25 @@ func TestShortenerAPIHandler_PostEndpoint(t *testing.T) {
 		URL:  "wrong url",
 		want: want{
 			code: http.StatusBadRequest,
-			result: util.StuctEncode(struct {
+			result: util.StructEncode(struct {
 				Result string `json:"api_error"`
 			}{Result: "Wrong URL given -" + "wrong url"}),
 			contentType: contentType,
 		},
 	})
 
-	server := server.NewServer(
+	srv := server.NewServer(
 		shortenerPort)
-	server.MountHandlers(host, mockStorage)
+	srv.MountHandlers(host, mockStorage)
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 
-			body := strings.NewReader(util.StuctEncode(struct {
+			body := strings.NewReader(util.StructEncode(struct {
 				URL string `json:"url"`
 			}{URL: tt.URL}))
 
 			request := httptest.NewRequest(http.MethodPost, "/api/shorten", body)
-			response := executeRequest(request, server)
+			response := executeRequest(request, srv)
 			// check status code
 			assert.Equal(t, tt.want.code, response.StatusCode, "wrong answer code")
 
@@ -86,7 +87,11 @@ func TestShortenerAPIHandler_PostEndpoint(t *testing.T) {
 
 			assert.Equal(t, tt.want.contentType, response.Header.Get("Content-Type"), "wrong content-type")
 
-			defer response.Body.Close()
+			defer func() {
+				if err := response.Body.Close(); err != nil {
+					log.Println(err.Error())
+				}
+			}()
 
 		})
 	}

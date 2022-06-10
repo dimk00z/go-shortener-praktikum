@@ -14,10 +14,10 @@ func StartApp() {
 	log.Printf("%+v\n", config)
 
 	host := config.Server.Host
-	server := server.NewServer(config.Server.Port)
+	srv := server.NewServer(config.Server.Port)
 	storage := storagedi.GetStorage(config.Storage)
 
-	server.MountHandlers(host, storage)
+	srv.MountHandlers(host, storage)
 	ctx, cancel := context.WithCancel(context.Background())
-	server.RunServer(ctx, cancel, storage)
+	srv.RunServer(ctx, cancel, storage)
 }

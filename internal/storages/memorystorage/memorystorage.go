@@ -9,7 +9,7 @@ import (
 	"github.com/dimk00z/go-shortener-praktikum/internal/storages/storageerrors"
 )
 
-type webResourse struct {
+type webResource struct {
 	URL     string
 	counter int32
 }
@@ -20,13 +20,13 @@ type UserURL struct {
 }
 
 type URLStorage struct {
-	ShortURLs map[string]webResourse
+	ShortURLs map[string]webResource
 	UsersData map[string][]UserURL
 }
 
 func NewStorage() *URLStorage {
 	return &URLStorage{
-		ShortURLs: make(map[string]webResourse),
+		ShortURLs: make(map[string]webResource),
 		UsersData: make(map[string][]UserURL),
 	}
 }
@@ -36,7 +36,7 @@ func (st *URLStorage) SaveURL(URL string, shortURL string, userID string) (err e
 		log.Println(URL, " has been already saved")
 		return storageerrors.ErrURLAlreadySave
 	}
-	st.ShortURLs[shortURL] = webResourse{
+	st.ShortURLs[shortURL] = webResource{
 		URL:     URL,
 		counter: 0}
 	log.Println(shortURL, st.ShortURLs[shortURL])
@@ -51,14 +51,14 @@ func (st *URLStorage) SaveURL(URL string, shortURL string, userID string) (err e
 }
 
 func (st *URLStorage) GetByShortURL(requiredURL string) (URL string, err error) {
-	webResourse, ok := st.ShortURLs[requiredURL]
+	webResource, ok := st.ShortURLs[requiredURL]
 	if ok {
-		webResourse.counter += 1
-		st.ShortURLs[requiredURL] = webResourse
+		webResource.counter += 1
+		st.ShortURLs[requiredURL] = webResource
 
 		log.Println(st.ShortURLs[requiredURL])
 
-		return webResourse.URL, nil
+		return webResource.URL, nil
 	} else {
 		err = errors.New(requiredURL + " does not exist")
 		return
@@ -94,7 +94,10 @@ func (st *URLStorage) SaveBatch(
 	user string) (result models.BatchShortURLs, err error) {
 	result = make(models.BatchShortURLs, len(batch))
 	for index, row := range batch {
-		st.SaveURL(row.OriginalURL, row.ShortURL, user)
+		err = st.SaveURL(row.OriginalURL, row.ShortURL, user)
+		if err != nil {
+			log.Println(err)
+		}
 		result[index].CorrelationID = row.CorrelationID
 		result[index].ShortURL = row.ShortURL
 	}

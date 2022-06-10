@@ -11,7 +11,7 @@ import (
 	"github.com/dimk00z/go-shortener-praktikum/internal/storages/storageerrors"
 )
 
-type webResourse struct {
+type webResource struct {
 	URL     string `json:"url"`
 	Counter int32  `json:"counter"`
 }
@@ -23,13 +23,13 @@ type UserURL struct {
 
 type FileStorage struct {
 	fileName  string                 `json:"-"`
-	ShortURLs map[string]webResourse `json:"short_urls"`
+	ShortURLs map[string]webResource `json:"short_urls"`
 	UsersData map[string][]UserURL   `json:"users_data"`
 }
 
 func NewFileStorage(filename string) (st *FileStorage) {
 	storage := &FileStorage{
-		ShortURLs: make(map[string]webResourse),
+		ShortURLs: make(map[string]webResource),
 		UsersData: make(map[string][]UserURL),
 		fileName:  filename,
 	}
@@ -43,7 +43,11 @@ func (st *FileStorage) load() {
 	if err != nil {
 		log.Panicln(err)
 	}
-	defer file.Close()
+	defer func() {
+		if err := file.Close(); err != nil {
+			log.Println(err.Error())
+		}
+	}()
 	decoder := json.NewDecoder(file)
 	if err := decoder.Decode(&st); err != nil {
 		log.Println(err)
@@ -57,7 +61,7 @@ func (st *FileStorage) SaveURL(URL string, shortURL string, userID string) (err 
 	if _, ok := st.ShortURLs[shortURL]; ok {
 		return storageerrors.ErrURLAlreadySave
 	}
-	wb := webResourse{
+	wb := webResource{
 		URL:     URL,
 		Counter: 0,
 	}
@@ -84,7 +88,10 @@ func (st *FileStorage) SaveBatch(
 	user string) (result models.BatchShortURLs, err error) {
 	result = make(models.BatchShortURLs, len(batch))
 	for index, row := range batch {
-		st.SaveURL(row.OriginalURL, row.ShortURL, user)
+		err = st.SaveURL(row.OriginalURL, row.ShortURL, user)
+		if err != nil {
+			log.Println(err.Error())
+		}
 		result[index].CorrelationID = row.CorrelationID
 		result[index].ShortURL = row.ShortURL
 	}
@@ -93,14 +100,14 @@ func (st *FileStorage) SaveBatch(
 }
 
 func (st *FileStorage) GetByShortURL(requiredURL string) (URL string, err error) {
-	webResourse, ok := st.ShortURLs[requiredURL]
+	webResource, ok := st.ShortURLs[requiredURL]
 	if ok {
-		webResourse.Counter += 1
-		st.ShortURLs[requiredURL] = webResourse
+		webResource.Counter += 1
+		st.ShortURLs[requiredURL] = webResource
 
 		log.Println(st.ShortURLs[requiredURL])
 
-		return webResourse.URL, nil
+		return webResource.URL, nil
 	} else {
 		err = errors.New(requiredURL + " does not exist")
 		return
@@ -112,10 +119,17 @@ func (st *FileStorage) updateFile() error {
 		log.Println(err)
 		return err
 	}
-	defer file.Close()
+	defer func() {
+		if err := file.Close(); err != nil {
+			log.Println(err.Error())
+		}
+	}()
 	encoder := json.NewEncoder(file)
 	encoder.SetEscapeHTML(false)
-	encoder.Encode(&st)
+	err = encoder.Encode(&st)
+	if err != nil {
+		log.Println(err)
+	}
 	err = file.Sync()
 	if err != nil {
 		log.Println(err)
@@ -124,7 +138,7 @@ func (st *FileStorage) updateFile() error {
 }
 func (st *FileStorage) Close() (err error) {
 	err = st.updateFile()
-	log.Println("Filestorage closed correctly")
+	log.Println("FileStorage closed correctly")
 
 	return err
 }

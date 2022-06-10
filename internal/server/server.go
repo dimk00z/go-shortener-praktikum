@@ -38,7 +38,7 @@ func (s *ShortenerServer) MountHandlers(host string, st storageinterface.Storage
 	s.Router.Use(middleware.Logger)
 	s.Router.Use(middleware.Recoverer)
 	s.Router.Use(decompressor.DecompressHandler)
-	s.Router.Use(cookie.CookieHandler)
+	s.Router.Use(cookie.Handler)
 
 	s.Router.Use(middleware.Compress(5))
 
@@ -99,6 +99,9 @@ func (s ShortenerServer) RunServer(ctx context.Context, cancel context.CancelFun
 		log.Print("Got ", killSignal)
 	case <-ctx.Done():
 	}
-	storage.Close()
+	err := storage.Close()
+	if err != nil {
+		log.Println(err)
+	}
 	log.Print("Server closed")
 }

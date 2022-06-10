@@ -25,17 +25,20 @@ func ShortenLink(text string) string {
 func RequestBodyCheck(w http.ResponseWriter, r *http.Request) error {
 	if r.Body == http.NoBody {
 		err := errors.New("request should have body")
-		http.Error(w, string(err.Error()), http.StatusBadRequest)
+		http.Error(w, err.Error(), http.StatusBadRequest)
 		return err
 	}
 	return nil
 }
 
-func StuctEncode(s interface{}) string {
+func StructEncode(s interface{}) string {
 	buf := bytes.NewBuffer([]byte{})
 	encoder := json.NewEncoder(buf)
 	encoder.SetEscapeHTML(false)
-	encoder.Encode(s)
+	err := encoder.Encode(s)
+	if err != nil {
+		log.Println(err)
+	}
 	return buf.String()
 }
 
@@ -53,7 +56,11 @@ func JSONResponse(w http.ResponseWriter, message interface{}, code int) {
 	w.WriteHeader(code)
 	encoder := json.NewEncoder(w)
 	encoder.SetEscapeHTML(false)
-	encoder.Encode(message)
+	err := encoder.Encode(message)
+	if err != nil {
+		log.Println(err)
+		return
+	}
 }
 
 func GetCookieParam(paramName string, r *http.Request) (paramValue string) {

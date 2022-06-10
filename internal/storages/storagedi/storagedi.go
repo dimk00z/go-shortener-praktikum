@@ -17,7 +17,6 @@ var (
 
 func GetStorage(storageConfig settings.StorageConfig) (st storageinterface.Storage) {
 	once.Do(func() {
-		storageConfig := settings.LoadConfig().Storage
 		if storageConfig.DBStorage.DataSourceName != "" {
 			st = database.NewDataBaseStorage(storageConfig.DBStorage)
 			return
