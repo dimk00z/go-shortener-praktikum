@@ -9,13 +9,13 @@ CREATE TABLE IF NOT EXISTS "public"."user" (
 
 const createWebResourceTableQuery = `
 CREATE TABLE IF NOT EXISTS "public"."web_Resource" (
-    web_Resource_id uuid NOT NULL,
+    web_resource_id uuid NOT NULL,
     url varchar(300) NOT NULL,
     short_url varchar(50) NOT NULL,
     counter integer,
     is_deleted boolean DEFAULT FALSE,
     user_id uuid NOT NULL,
-    CONSTRAINT web_Resource_pkey PRIMARY KEY (web_Resource_id),
+    CONSTRAINT web_resource_pkey PRIMARY KEY (web_resource_id),
     CONSTRAINT user_id_url UNIQUE (user_id, url),
     CONSTRAINT fk_web_Resource_user FOREIGN KEY (user_id) REFERENCES public."user" (user_id) MATCH SIMPLE ON UPDATE CASCADE ON DELETE CASCADE
 );`
@@ -27,8 +27,8 @@ const insertUserQuery = `
 
 const insertWebResourceQuery = `
 INSERT INTO
-    public.web_Resource(
-        web_Resource_id,
+    public.web_resource(
+        web_resource_id,
         url,
         short_url,
         counter,
@@ -39,8 +39,8 @@ VALUES
 `
 const insertWebResourceBatchQuery = `
 INSERT INTO
-    public.web_Resource(
-        web_Resource_id,
+    public.web_resource(
+        web_resource_id,
         url,
         short_url,
         counter,
@@ -68,7 +68,7 @@ SELECT
     user_id,
     is_deleted
 FROM
-    public.web_Resource
+    public.web_resource
 WHERE
     short_url = $1;
 `
@@ -91,7 +91,7 @@ WHERE
 `
 
 const batchUpdate = `
-UPDATE public.web_Resource
+UPDATE public.web_resource
 SET is_deleted = TRUE
 WHERE short_url = any ($1) AND user_id=$2;
 `
