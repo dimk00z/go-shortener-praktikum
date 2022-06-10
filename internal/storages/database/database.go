@@ -45,7 +45,7 @@ func NewDataBaseStorage(dbConfig settings.DBStorageConfig) *DataBaseStorage {
 	if err := backoff.Retry(operation, b); err != nil {
 		log.Panicln(err)
 	}
-	createTables(st.db, createUsersTableQuery, createWebResourseTableQuery)
+	createTables(st.db, createUsersTableQuery, createWebResourceTableQuery)
 	return st
 }
 
@@ -84,8 +84,8 @@ func (st *DataBaseStorage) GetUserURLs(user string) (result models.UserURLs, err
 	return
 }
 
-type webResourse struct {
-	webResourseID string
+type webResource struct {
+	webResourceID string
 	URL           string
 	shortURL      string
 	counter       int
@@ -94,9 +94,9 @@ type webResourse struct {
 }
 
 func (st *DataBaseStorage) GetByShortURL(requiredURL string) (URL string, err error) {
-	result := webResourse{}
+	result := webResource{}
 	err = st.db.QueryRow(getURLQuery, requiredURL).Scan(
-		&result.webResourseID,
+		&result.webResourceID,
 		&result.URL,
 		&result.shortURL,
 		&result.counter,
@@ -108,7 +108,7 @@ func (st *DataBaseStorage) GetByShortURL(requiredURL string) (URL string, err er
 	}
 	log.Println(result, err)
 	URL = result.URL
-	_, err = st.db.Exec(updateCounterQuery, result.counter+1, result.webResourseID)
+	_, err = st.db.Exec(updateCounterQuery, result.counter+1, result.webResourceID)
 	if err != nil {
 		log.Println(err)
 	}
@@ -130,12 +130,12 @@ func (st *DataBaseStorage) saveUser(userID string) {
 
 func (st *DataBaseStorage) SaveURL(URL string, shortURL string, userID string) (err error) {
 	st.saveUser(userID)
-	webResourseUUID, err := uuid.NewV4()
+	webResourceUUID, err := uuid.NewV4()
 	if err != nil {
 		log.Println(err)
 	}
-	_, err = st.db.Exec(insertWebResourseQuery,
-		webResourseUUID.String(), URL, shortURL, "0", userID)
+	_, err = st.db.Exec(insertWebResourceQuery,
+		webResourceUUID.String(), URL, shortURL, "0", userID)
 
 	if err == nil {
 		return
@@ -165,7 +165,7 @@ func (st *DataBaseStorage) SaveBatch(
 		log.Println(err)
 	}(tx)
 
-	stmt, err := tx.PrepareContext(context.Background(), insertWebResourseBatchQuery)
+	stmt, err := tx.PrepareContext(context.Background(), insertWebResourceBatchQuery)
 	defer func(stmt *sql.Stmt) {
 		err := stmt.Close()
 		if err != nil {
@@ -174,7 +174,7 @@ func (st *DataBaseStorage) SaveBatch(
 	}(stmt)
 
 	for index, row := range batch {
-		webResourseUUID, err := uuid.NewV4()
+		webResourceUUID, err := uuid.NewV4()
 		if err != nil {
 			log.Println(err)
 		}
@@ -183,7 +183,7 @@ func (st *DataBaseStorage) SaveBatch(
 
 		if _, err = stmt.ExecContext(
 			context.Background(),
-			webResourseUUID.String(),
+			webResourceUUID.String(),
 			row.OriginalURL,
 			row.ShortURL,
 			0,

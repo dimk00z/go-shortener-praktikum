@@ -10,7 +10,7 @@ import (
 	"github.com/dimk00z/go-shortener-praktikum/internal/storages/storageerrors"
 )
 
-type webResourse struct {
+type webResource struct {
 	URL       string
 	counter   int32
 	isDeleted bool
@@ -22,13 +22,13 @@ type UserURL struct {
 }
 
 type URLStorage struct {
-	ShortURLs map[string]webResourse
+	ShortURLs map[string]webResource
 	UsersData map[string][]UserURL
 }
 
 func NewStorage() *URLStorage {
 	return &URLStorage{
-		ShortURLs: make(map[string]webResourse),
+		ShortURLs: make(map[string]webResource),
 		UsersData: make(map[string][]UserURL),
 	}
 }
@@ -38,7 +38,7 @@ func (st *URLStorage) SaveURL(URL string, shortURL string, userID string) (err e
 		log.Println(URL, " has been already saved")
 		return storageerrors.ErrURLAlreadySave
 	}
-	st.ShortURLs[shortURL] = webResourse{
+	st.ShortURLs[shortURL] = webResource{
 		URL:       URL,
 		counter:   0,
 		isDeleted: false}
@@ -54,16 +54,16 @@ func (st *URLStorage) SaveURL(URL string, shortURL string, userID string) (err e
 }
 
 func (st *URLStorage) GetByShortURL(requiredURL string) (URL string, err error) {
-	webResourse, ok := st.ShortURLs[requiredURL]
+	webResource, ok := st.ShortURLs[requiredURL]
 	if ok {
-		webResourse.counter += 1
-		st.ShortURLs[requiredURL] = webResourse
+		webResource.counter += 1
+		st.ShortURLs[requiredURL] = webResource
 
 		log.Println(st.ShortURLs[requiredURL])
-		if webResourse.isDeleted {
+		if webResource.isDeleted {
 			err = shortenererrors.ErrURLDeleted
 		}
-		return webResourse.URL, err
+		return webResource.URL, err
 	}
 	err = shortenererrors.ErrURLNotFound
 	return

@@ -38,10 +38,10 @@ func TestShortenerAPIHandler_PostEndpoint(t *testing.T) {
 	contentType := "application/json; charset=utf-8"
 
 	rStorage := reflect.ValueOf(mockStorage).Interface().(*memorystorage.URLStorage)
-	for shortURL, webResourse := range rStorage.ShortURLs {
+	for shortURL, webResource := range rStorage.ShortURLs {
 		tests = append(tests, test{
 			name: nameTest + strconv.Itoa(testIndex),
-			URL:  webResourse.URL,
+			URL:  webResource.URL,
 			want: want{
 				code: http.StatusConflict,
 				result: util.StuctEncode(struct {

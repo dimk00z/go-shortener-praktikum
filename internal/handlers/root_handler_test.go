@@ -42,13 +42,13 @@ func TestRootHandler_GetEndpoint(t *testing.T) {
 	nameTest := "GetEndpoint test "
 	rStorage := reflect.ValueOf(mockStorage).Interface().(*memorystorage.URLStorage)
 	//add correct mock data
-	for shortURL, webResourse := range rStorage.ShortURLs {
+	for shortURL, webResource := range rStorage.ShortURLs {
 		tests = append(tests, test{
 			name:     nameTest + strconv.Itoa(testIndex),
 			shortURL: shortURL,
 			want: want{
 				code:           http.StatusTemporaryRedirect,
-				locationHeader: webResourse.URL,
+				locationHeader: webResource.URL,
 			},
 		})
 		testIndex += 1
@@ -98,10 +98,10 @@ func TestRootHandler_PostEndpoint(t *testing.T) {
 	nameTest := "PostEndpoint test "
 	mockStorage := memorystorage.GenMockStorage()
 	rStorage := reflect.ValueOf(mockStorage).Interface().(*memorystorage.URLStorage)
-	for shortURL, webResourse := range rStorage.ShortURLs {
+	for shortURL, webResource := range rStorage.ShortURLs {
 		tests = append(tests, test{
 			name: nameTest + strconv.Itoa(testIndex),
-			URL:  webResourse.URL,
+			URL:  webResource.URL,
 			want: want{
 				code:        http.StatusConflict,
 				result:      fmt.Sprintf("%s/%s", host, shortURL),
