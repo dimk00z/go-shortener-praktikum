@@ -21,6 +21,7 @@ type ShortenerServer struct {
 	port   string
 	Router *chi.Mux
 	wp     worker.IWorkerPool
+	st     storageinterface.Storage
 }
 
 func NewServer(port string, wp worker.IWorkerPool) *ShortenerServer {
@@ -30,7 +31,7 @@ func NewServer(port string, wp worker.IWorkerPool) *ShortenerServer {
 		wp:     wp,
 	}
 }
-func (s *ShortenerServer) MountHandlers(host string, st storageinterface.Storage) {
+func (s *ShortenerServer) mountMiddleware() {
 	// Mount all Middleware here
 	middlewareHadlers := []func(http.Handler) http.Handler{
 		middleware.RequestID,
@@ -43,7 +44,10 @@ func (s *ShortenerServer) MountHandlers(host string, st storageinterface.Storage
 	for _, handler := range middlewareHadlers {
 		s.Router.Use(handler)
 	}
+}
+func (s *ShortenerServer) MountHandlers(host string, st storageinterface.Storage) {
 
+	s.mountMiddleware()
 	h := handlers.NewShortenerHandler()
 	handlerOptions := []handlers.ShortenerOptions{
 		handlers.SetHost(host),
@@ -56,8 +60,8 @@ func (s *ShortenerServer) MountHandlers(host string, st storageinterface.Storage
 	}
 
 	s.Router.Route("/", func(r chi.Router) {
-		r.Post("/", h.HandlePOSTRequest)
-		r.Get("/{shortURL}", h.HandleGETRequest)
+		r.Post("/", h.PostShortURL)
+		r.Get("/{shortURL}", h.GetByShortURL)
 	})
 
 	apiRouter := chi.NewRouter()
@@ -81,6 +85,7 @@ func (s *ShortenerServer) MountHandlers(host string, st storageinterface.Storage
 
 func (s ShortenerServer) RunServer(ctx context.Context, cancel context.CancelFunc, storage storageinterface.Storage) {
 	interrupt := make(chan os.Signal, 1)
+	defer s.wp.Close()
 	signal.Notify(interrupt, os.Interrupt, syscall.SIGTERM)
 	go func() {
 		log.Println("Server started at " + s.port)
@@ -96,5 +101,9 @@ func (s ShortenerServer) RunServer(ctx context.Context, cancel context.CancelFun
 		cancel()
 	case <-ctx.Done():
 	}
+
+}
+
+func (s ShortenerServer) ShutDown() {
 	log.Print("Server closed")
 }

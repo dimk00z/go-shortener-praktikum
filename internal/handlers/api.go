@@ -16,7 +16,7 @@ import (
 	"github.com/go-chi/chi"
 )
 
-func (h ShortenerHandler) HandleGETRequest(w http.ResponseWriter, r *http.Request) {
+func (h ShortenerHandler) GetByShortURL(w http.ResponseWriter, r *http.Request) {
 	shortURL := chi.URLParam(r, "shortURL")
 	log.Println("Get " + shortURL + " shortURL")
 	var err error
@@ -39,7 +39,7 @@ func (h ShortenerHandler) HandleGETRequest(w http.ResponseWriter, r *http.Reques
 
 }
 
-func (h ShortenerHandler) HandlePOSTRequest(w http.ResponseWriter, r *http.Request) {
+func (h ShortenerHandler) PostShortURL(w http.ResponseWriter, r *http.Request) {
 
 	if err := util.RequestBodyCheck(w, r); err != nil {
 		return
