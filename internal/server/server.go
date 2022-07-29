@@ -32,14 +32,17 @@ func NewServer(port string, wp worker.IWorkerPool) *ShortenerServer {
 }
 func (s *ShortenerServer) MountHandlers(host string, st storageinterface.Storage) {
 	// Mount all Middleware here
-	s.Router.Use(middleware.RequestID)
-	s.Router.Use(middleware.Logger)
-	s.Router.Use(middleware.Recoverer)
-	s.Router.Use(decompressor.DecompressHandler)
-	s.Router.Use(cookie.CookieHandler)
-
-	s.Router.Use(middleware.Compress(5))
-
+	hadlers := []func(http.Handler) http.Handler{
+		middleware.RequestID,
+		middleware.Logger,
+		middleware.Recoverer,
+		decompressor.DecompressHandler,
+		cookie.CookieHandler,
+		middleware.Compress(5),
+	}
+	for _, handler := range hadlers {
+		s.Router.Use(handler)
+	}
 	// Mount all handlers here
 	// Sprint 1
 	s.Router.Route("/", func(r chi.Router) {
