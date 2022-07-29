@@ -202,3 +202,9 @@ func TestShortenerHandler_SaveJSON(t *testing.T) {
 		})
 	}
 }
+
+func TestShortenerHandler_SaveBatch(t *testing.T) {
+	// TODO add logic
+	assert.Equal(t, http.StatusOK, http.StatusOK, "wrong answer code")
+
+}
