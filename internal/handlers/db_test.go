@@ -1,6 +1,7 @@
 package handlers_test
 
 import (
+	"io"
 	"net/http"
 	"testing"
 
@@ -15,11 +16,15 @@ func TestShortenerHandler_PingDB(t *testing.T) {
 	defer wp.Close()
 	s := createMockServer(mockStorage, wp)
 	req, _ := http.NewRequest("GET", "/ping", nil)
-	response := execRequest(req, s)
-	defer response.Result().Body.Close()
-	assert.Equal(t, http.StatusInternalServerError, response.Code, "wrong answer code")
-	assert.Equal(t, "{\"message\":\"wrong storage type\"}\n", response.Body.String())
+	response := execRequest(req, s).Result()
+	defer response.Body.Close()
+	resBody, err := io.ReadAll(response.Body)
+	if err != nil {
+		t.Fatal(err)
+	}
+	assert.Equal(t, http.StatusInternalServerError, response.StatusCode, "wrong answer code")
+	assert.Equal(t, "{\"message\":\"wrong storage type\"}\n", string(resBody))
 	assert.Equal(t, "application/json; charset=utf-8",
-		response.Result().Header.Get("Content-Type"))
+		response.Header.Get("Content-Type"))
 
 }
