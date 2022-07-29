@@ -16,8 +16,8 @@ func TestShortenerHandler_PingDB(t *testing.T) {
 	s := createMockServer(mockStorage, wp)
 	req, _ := http.NewRequest("GET", "/ping", nil)
 	response := execRequest(req, s)
+	defer response.Result().Body.Close()
 	assert.Equal(t, http.StatusInternalServerError, response.Code, "wrong answer code")
-
 	assert.Equal(t, "{\"message\":\"wrong storage type\"}\n", response.Body.String())
 	assert.Equal(t, "application/json; charset=utf-8",
 		response.Result().Header.Get("Content-Type"))
