@@ -11,10 +11,26 @@ type ShortenerHandler struct {
 	wp      worker.IWorkerPool
 }
 
-func NewShortenerHandler(host string, st storageinterface.Storage, wp worker.IWorkerPool) *ShortenerHandler {
-	return &ShortenerHandler{
-		Storage: st,
-		host:    host,
-		wp:      wp,
+func NewShortenerHandler() *ShortenerHandler {
+	return &ShortenerHandler{}
+}
+
+type ShortenerOptions func(*ShortenerHandler)
+
+func SetStorage(st storageinterface.Storage) ShortenerOptions {
+	return func(s *ShortenerHandler) {
+		s.Storage = st
+	}
+}
+
+func SetHost(host string) ShortenerOptions {
+	return func(s *ShortenerHandler) {
+		s.host = host
+	}
+}
+
+func SetWorkerPool(wp worker.IWorkerPool) ShortenerOptions {
+	return func(s *ShortenerHandler) {
+		s.wp = wp
 	}
 }

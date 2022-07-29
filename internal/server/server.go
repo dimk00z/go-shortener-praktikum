@@ -44,37 +44,39 @@ func (s *ShortenerServer) MountHandlers(host string, st storageinterface.Storage
 		s.Router.Use(handler)
 	}
 
-	h := handlers.NewShortenerHandler(
-		host,
-		st,
-		s.wp,
-	)
+	h := handlers.NewShortenerHandler()
+	handlerOptions := []handlers.ShortenerOptions{
+		handlers.SetHost(host),
+		handlers.SetStorage(st),
+		handlers.SetWorkerPool(s.wp),
+	}
+
+	for _, opt := range handlerOptions {
+		opt(h)
+	}
+
 	s.Router.Route("/", func(r chi.Router) {
 		r.Post("/", h.HandlePOSTRequest)
 		r.Get("/{shortURL}", h.HandleGETRequest)
 	})
 
-	shortenerRouter := chi.NewRouter()
-	shortenerRouter.Route("/", func(r chi.Router) {
+	apiRouter := chi.NewRouter()
+	apiRouter.Mount("/shorten", chi.NewRouter().Route("/", func(r chi.Router) {
 		r.Post("/", h.SaveJSON)
 		r.Post("/batch", h.SaveBatch)
-	})
+	}))
 
-	userRouter := chi.NewRouter()
-	userRouter.Route("/", func(r chi.Router) {
+	apiRouter.Mount("/user", chi.NewRouter().Route("/", func(r chi.Router) {
 		r.Get("/urls", h.GetUserURLs)
 		r.Delete("/urls", h.DeleteUserURLs)
-	})
-	dbRouter := chi.NewRouter()
-	dbRouter.Route("/", func(r chi.Router) {
-		r.Get("/", h.PingDB)
-	})
-	apiRouter := chi.NewRouter()
-	apiRouter.Mount("/shorten", shortenerRouter)
-	apiRouter.Mount("/user", userRouter)
+	}))
 
 	s.Router.Mount("/api", apiRouter)
-	s.Router.Mount("/ping", dbRouter)
+
+	s.Router.Mount("/ping",
+		chi.NewRouter().Route("/", func(r chi.Router) {
+			r.Get("/", h.PingDB)
+		}))
 }
 
 func (s ShortenerServer) RunServer(ctx context.Context, cancel context.CancelFunc, storage storageinterface.Storage) {

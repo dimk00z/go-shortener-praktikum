@@ -31,7 +31,7 @@ func (h ShortenerAPIHandler) SaveJSON(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	var u URLRequest // целевой объект
+	var u models.URLRequest // целевой объект
 
 	if err := json.NewDecoder(r.Body).Decode(&u); err != nil {
 		util.JSONError(w, err.Error(), http.StatusBadRequest)

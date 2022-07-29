@@ -18,3 +18,7 @@ type UserURL struct {
 }
 
 type UserURLs []UserURL
+
+type URLRequest struct {
+	URL string `json:"url"`
+}
