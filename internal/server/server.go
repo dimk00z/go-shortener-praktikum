@@ -32,7 +32,7 @@ func NewServer(port string, wp worker.IWorkerPool) *ShortenerServer {
 }
 func (s *ShortenerServer) MountHandlers(host string, st storageinterface.Storage) {
 	// Mount all Middleware here
-	hadlers := []func(http.Handler) http.Handler{
+	middlewareHadlers := []func(http.Handler) http.Handler{
 		middleware.RequestID,
 		middleware.Logger,
 		middleware.Recoverer,
@@ -40,44 +40,34 @@ func (s *ShortenerServer) MountHandlers(host string, st storageinterface.Storage
 		cookie.CookieHandler,
 		middleware.Compress(5),
 	}
-	for _, handler := range hadlers {
+	for _, handler := range middlewareHadlers {
 		s.Router.Use(handler)
 	}
-	// Mount all handlers here
-	// Sprint 1
-	s.Router.Route("/", func(r chi.Router) {
-		h := handlers.NewRootHandler(host,
-			st)
 
+	h := handlers.NewShortenerHandler(
+		host,
+		st,
+		s.wp,
+	)
+	s.Router.Route("/", func(r chi.Router) {
 		r.Post("/", h.HandlePOSTRequest)
 		r.Get("/{shortURL}", h.HandleGETRequest)
 	})
-	// Sprint 2
+
 	shortenerRouter := chi.NewRouter()
 	shortenerRouter.Route("/", func(r chi.Router) {
-		h := handlers.NewShortenerAPIHandler(host,
-			st)
 		r.Post("/", h.SaveJSON)
-		// Sprint 3 Increment 12
 		r.Post("/batch", h.SaveBatch)
 	})
 
-	// Sprint 3
 	userRouter := chi.NewRouter()
 	userRouter.Route("/", func(r chi.Router) {
-		userHandler := handlers.NewUserHandler(
-			host,
-			st,
-			s.wp,
-		)
-		r.Get("/urls", userHandler.GetUserURLs)
-		r.Delete("/urls", userHandler.DeleteUserURLs)
+		r.Get("/urls", h.GetUserURLs)
+		r.Delete("/urls", h.DeleteUserURLs)
 	})
 	dbRouter := chi.NewRouter()
 	dbRouter.Route("/", func(r chi.Router) {
-		dbHandler := handlers.NewDBHandler(host,
-			st)
-		r.Get("/", dbHandler.PingDB)
+		r.Get("/", h.PingDB)
 	})
 	apiRouter := chi.NewRouter()
 	apiRouter.Mount("/shorten", shortenerRouter)
