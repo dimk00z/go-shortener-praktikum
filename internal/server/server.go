@@ -11,6 +11,7 @@ import (
 	"github.com/dimk00z/go-shortener-praktikum/internal/handlers"
 	"github.com/dimk00z/go-shortener-praktikum/internal/middleware/cookie"
 	"github.com/dimk00z/go-shortener-praktikum/internal/middleware/decompressor"
+	"github.com/dimk00z/go-shortener-praktikum/internal/settings"
 	"github.com/dimk00z/go-shortener-praktikum/internal/storages/storageinterface"
 	"github.com/dimk00z/go-shortener-praktikum/internal/worker"
 	"github.com/go-chi/chi"
@@ -33,14 +34,20 @@ func NewServer(port string, wp worker.IWorkerPool) *ShortenerServer {
 }
 func (s *ShortenerServer) mountMiddleware() {
 	// Mount all Middleware here
+	cookieHandler := cookie.CookieHandler{
+		SecretKey: settings.LoadConfig().Security.SecretKey,
+	}
+	decompressHandler := decompressor.DecompressHandler{}
+
 	middlewareHadlers := []func(http.Handler) http.Handler{
 		middleware.RequestID,
 		middleware.Logger,
 		middleware.Recoverer,
-		decompressor.DecompressHandler,
-		cookie.CookieHandler,
+		decompressHandler.Handle,
+		cookieHandler.Handle,
 		middleware.Compress(5),
 	}
+
 	for _, handler := range middlewareHadlers {
 		s.Router.Use(handler)
 	}

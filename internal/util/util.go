@@ -2,7 +2,9 @@ package util
 
 import (
 	"bytes"
+	"crypto/hmac"
 	"crypto/md5"
+	"crypto/sha256"
 	"encoding/hex"
 	"encoding/json"
 	"errors"
@@ -64,4 +66,12 @@ func GetCookieParam(paramName string, r *http.Request) (paramValue string) {
 	}
 	log.Printf("Cookie '%s':%s\n", paramName, cookieParam.Value)
 	return cookieParam.Value
+}
+
+func GetSign(msg []byte, secretKey string) (stringSign string) {
+	h := hmac.New(sha256.New, []byte(secretKey))
+	h.Write(msg)
+	sign := h.Sum(nil)
+	stringSign = hex.EncodeToString(sign)
+	return
 }

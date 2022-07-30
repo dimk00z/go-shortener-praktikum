@@ -2,13 +2,9 @@ package cookie
 
 import (
 	"context"
-	"crypto/hmac"
-	"crypto/sha256"
-	"encoding/hex"
 	"log"
 	"net/http"
 
-	"github.com/dimk00z/go-shortener-praktikum/internal/settings"
 	"github.com/dimk00z/go-shortener-praktikum/internal/util"
 	uuid "github.com/satori/go.uuid"
 )
@@ -23,13 +19,17 @@ const (
 	UserIDCtxName        ContextType = "ctxUserId"
 )
 
-func CookieHandler(next http.Handler) http.Handler {
+type CookieHandler struct {
+	SecretKey string
+}
+
+func (h *CookieHandler) Handle(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		cookieUserID := util.GetCookieParam(cookieUserIDField, r)
 		log.Println(cookieUserID)
 		if cookieUserID != "" {
 			gotUUID := uuid.FromStringOrNil(cookieUserID[:uuidStringLength])
-			requiredSign := GetSign(gotUUID.Bytes())
+			requiredSign := util.GetSign(gotUUID.Bytes(), h.SecretKey)
 			checkSign := cookieUserID[signSentencePosition:] == requiredSign
 			log.Println("Sign check status:", checkSign)
 			if checkSign {
@@ -39,7 +39,7 @@ func CookieHandler(next http.Handler) http.Handler {
 		}
 		userID := uuid.NewV4()
 		log.Printf("User id: %s\n", userID)
-		stringSign := GetSign(userID.Bytes())
+		stringSign := util.GetSign(userID.Bytes(), h.SecretKey)
 		cookieUserID = userID.String()
 		cookie := &http.Cookie{
 			Name:   cookieUserIDField,
@@ -50,12 +50,4 @@ func CookieHandler(next http.Handler) http.Handler {
 		http.SetCookie(w, cookie)
 		next.ServeHTTP(w, r.WithContext(context.WithValue(r.Context(), UserIDCtxName, cookieUserID)))
 	})
-}
-
-func GetSign(msg []byte) (stringSign string) {
-	h := hmac.New(sha256.New, []byte(settings.LoadConfig().Security.SecretKey))
-	h.Write(msg)
-	sign := h.Sum(nil)
-	stringSign = hex.EncodeToString(sign)
-	return
 }

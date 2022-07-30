@@ -6,7 +6,9 @@ import (
 	"strings"
 )
 
-func DecompressHandler(next http.Handler) http.Handler {
+type DecompressHandler struct{}
+
+func (h *DecompressHandler) Handle(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		if !strings.Contains(r.Header.Get("Content-Encoding"), "gzip") {
 			next.ServeHTTP(w, r)
