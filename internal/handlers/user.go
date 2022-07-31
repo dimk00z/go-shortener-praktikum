@@ -46,7 +46,6 @@ func (h ShortenerHandler) DeleteUserURLs(w http.ResponseWriter, r *http.Request)
 	}
 	log.Println(shortURLs)
 
-	// TODO проверить удаление удаление сюда!
 	deleteBatchTask := func(ctx context.Context) error {
 		return h.Storage.DeleteBatch(ctx, shortURLs, userIDCtx)
 	}
