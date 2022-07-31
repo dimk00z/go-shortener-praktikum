@@ -13,7 +13,6 @@ func TestShortenerHandler_PingDB(t *testing.T) {
 	mockStorage := memorystorage.GenMockStorage()
 	defer mockStorage.Close()
 	wp := getMockWorkersPool()
-	defer wp.Close()
 	s := createMockServer(mockStorage, wp)
 	req, _ := http.NewRequest("GET", "/ping", nil)
 	response := execRequest(req, s).Result()

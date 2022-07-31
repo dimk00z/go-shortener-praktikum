@@ -2,22 +2,29 @@ package app
 
 import (
 	"context"
-	"log"
 
 	"github.com/dimk00z/go-shortener-praktikum/internal/server"
 	"github.com/dimk00z/go-shortener-praktikum/internal/settings"
 	"github.com/dimk00z/go-shortener-praktikum/internal/storages/storagedi"
 	"github.com/dimk00z/go-shortener-praktikum/internal/storages/storageinterface"
 	"github.com/dimk00z/go-shortener-praktikum/internal/worker"
+	"github.com/dimk00z/go-shortener-praktikum/pkg/logger"
 )
 
 func StartApp() {
 	config := settings.LoadConfig()
-	log.Printf("%+v\n", config)
+	l := logger.New(config.Loger.Level)
+
+	l.Debug("%+v\n", config)
 
 	host := config.Server.Host
 	wp := worker.GetWorkersPool(config.Workers)
 	server := server.NewServer(config.Server.Port, wp)
+
+	if config.Storage.DBStorage.DataSourceName != "" {
+		doMigrations(config.Storage.DBStorage.DataSourceName, l)
+	}
+
 	storage := storagedi.GetStorage(config.Storage)
 
 	server.MountHandlers(host, storage)
@@ -31,7 +38,6 @@ func StartApp() {
 }
 
 func shutDown(wp worker.IWorkerPool, st storageinterface.Storage, s *server.ShortenerServer) {
-	wp.Close()
 	st.Close()
 	s.ShutDown()
 }

@@ -45,7 +45,6 @@ func NewDataBaseStorage(dbConfig settings.DBStorageConfig) *DataBaseStorage {
 	if err := backoff.Retry(operation, b); err != nil {
 		log.Panicln(err)
 	}
-	createTables(st.db, createUsersTableQuery, createWebResourseTableQuery)
 	return st
 }
 
@@ -201,14 +200,6 @@ func (st *DataBaseStorage) SaveBatch(
 
 func (st *DataBaseStorage) CheckConnection(ctx context.Context) error {
 	return st.db.PingContext(ctx)
-}
-
-func createTables(db *sql.DB, tables ...string) {
-	for _, table := range tables {
-		if _, err := db.Exec(table); err != nil {
-			log.Println(err)
-		}
-	}
 }
 
 func (st *DataBaseStorage) DeleteBatch(ctx context.Context, batch models.BatchForDelete, user string) (err error) {

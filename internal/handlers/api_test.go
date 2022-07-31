@@ -1,6 +1,7 @@
 package handlers_test
 
 import (
+	"encoding/json"
 	"fmt"
 	"io"
 	"net/http"
@@ -10,6 +11,7 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/dimk00z/go-shortener-praktikum/internal/models"
 	"github.com/dimk00z/go-shortener-praktikum/internal/storages/memorystorage"
 	"github.com/dimk00z/go-shortener-praktikum/internal/util"
 	"github.com/stretchr/testify/assert"
@@ -204,7 +206,42 @@ func TestShortenerHandler_SaveJSON(t *testing.T) {
 }
 
 func TestShortenerHandler_SaveBatch(t *testing.T) {
-	// TODO add logic
-	assert.Equal(t, http.StatusOK, http.StatusOK, "wrong answer code")
+	mockStorage := memorystorage.GenMockStorage()
+	defer mockStorage.Close()
+	wp := getMockWorkersPool()
+	defer wp.Close()
+	s := createMockServer(mockStorage, wp)
+	batchForRequest := make([]struct {
+		CorrelationID string `json:"correlation_id"`
+		OriginalURL   string `json:"original_url"`
+		ShortURL      string `json:"-"`
+	}, 2)
+	batchForRequest[0].CorrelationID = "1"
+	batchForRequest[0].OriginalURL = "https://practicum.yandex.ru/"
+	batchForRequest[0].ShortURL = "http://localhost:8080/0dd19817"
+
+	b, err := json.Marshal(&batchForRequest)
+	if err != nil {
+		t.Fatal(err)
+	}
+	requestBody := string(b)
+	req, _ := http.NewRequest(http.MethodPost, "/api/shorten/batch", strings.NewReader(requestBody))
+	response := execRequest(req, s).Result()
+	defer response.Body.Close()
+	resBody, err := io.ReadAll(response.Body)
+	if err != nil {
+		t.Fatal(err)
+	}
+	assert.Equal(t, http.StatusCreated, response.StatusCode, "wrong answer code")
+	var responseBatch models.BatchShortURLs
+	err = json.Unmarshal(resBody, &responseBatch)
+	if err != nil {
+		t.Fatal(err)
+	}
+	assert.Equal(t, batchForRequest[0].CorrelationID, responseBatch[0].CorrelationID)
+	assert.Equal(t, batchForRequest[0].ShortURL, responseBatch[0].ShortURL)
+
+	assert.Equal(t, "application/json; charset=utf-8",
+		response.Header.Get("Content-Type"))
 
 }
