@@ -22,7 +22,6 @@ type ShortenerServer struct {
 	port   string
 	Router *chi.Mux
 	wp     worker.IWorkerPool
-	st     storageinterface.Storage
 }
 
 func NewServer(port string, wp worker.IWorkerPool) *ShortenerServer {
