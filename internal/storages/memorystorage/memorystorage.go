@@ -99,7 +99,10 @@ func (st *URLStorage) SaveBatch(
 	user string) (result models.BatchShortURLs, err error) {
 	result = make(models.BatchShortURLs, len(batch))
 	for index, row := range batch {
-		st.SaveURL(row.OriginalURL, row.ShortURL, user)
+		err := st.SaveURL(row.OriginalURL, row.ShortURL, user)
+		if err != nil {
+			log.Println(err)
+		}
 		result[index].CorrelationID = row.CorrelationID
 		result[index].ShortURL = row.ShortURL
 	}

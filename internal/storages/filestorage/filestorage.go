@@ -87,7 +87,10 @@ func (st *FileStorage) SaveBatch(
 	user string) (result models.BatchShortURLs, err error) {
 	result = make(models.BatchShortURLs, len(batch))
 	for index, row := range batch {
-		st.SaveURL(row.OriginalURL, row.ShortURL, user)
+		err := st.SaveURL(row.OriginalURL, row.ShortURL, user)
+		if err != nil {
+			log.Println(err)
+		}
 		result[index].CorrelationID = row.CorrelationID
 		result[index].ShortURL = row.ShortURL
 	}
@@ -117,10 +120,18 @@ func (st *FileStorage) updateFile() error {
 		log.Println(err)
 		return err
 	}
-	defer file.Close()
+	defer func() {
+		err := file.Close()
+		if err != nil {
+			log.Println(err)
+		}
+	}()
 	encoder := json.NewEncoder(file)
 	encoder.SetEscapeHTML(false)
-	encoder.Encode(&st)
+	err = encoder.Encode(&st)
+	if err != nil {
+		log.Println(err)
+	}
 	err = file.Sync()
 	if err != nil {
 		log.Println(err)

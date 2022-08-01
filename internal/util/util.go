@@ -8,6 +8,7 @@ import (
 	"encoding/hex"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"log"
 	"net/http"
 	"net/url"
@@ -37,7 +38,10 @@ func StuctEncode(s interface{}) string {
 	buf := bytes.NewBuffer([]byte{})
 	encoder := json.NewEncoder(buf)
 	encoder.SetEscapeHTML(false)
-	encoder.Encode(s)
+	err := encoder.Encode(s)
+	if err != nil {
+		fmt.Println(err)
+	}
 	return buf.String()
 }
 
@@ -55,7 +59,10 @@ func JSONResponse(w http.ResponseWriter, message interface{}, code int) {
 	w.WriteHeader(code)
 	encoder := json.NewEncoder(w)
 	encoder.SetEscapeHTML(false)
-	encoder.Encode(message)
+	err := encoder.Encode(message)
+	if err != nil {
+		log.Println(err)
+	}
 }
 
 func GetCookieParam(paramName string, r *http.Request) (paramValue string) {
