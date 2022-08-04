@@ -3,12 +3,14 @@ package handlers
 import (
 	"github.com/dimk00z/go-shortener-praktikum/internal/storages/storageinterface"
 	"github.com/dimk00z/go-shortener-praktikum/internal/worker"
+	"github.com/dimk00z/go-shortener-praktikum/pkg/logger"
 )
 
 type ShortenerHandler struct {
 	Storage storageinterface.Storage
 	host    string
 	wp      worker.IWorkerPool
+	l       *logger.Logger
 }
 
 func NewShortenerHandler() *ShortenerHandler {
@@ -32,5 +34,10 @@ func SetHost(host string) ShortenerOptions {
 func SetWorkerPool(wp worker.IWorkerPool) ShortenerOptions {
 	return func(s *ShortenerHandler) {
 		s.wp = wp
+	}
+}
+func SetLoger(l *logger.Logger) ShortenerOptions {
+	return func(s *ShortenerHandler) {
+		s.l = l
 	}
 }

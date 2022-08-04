@@ -2,7 +2,6 @@ package worker
 
 import (
 	"context"
-	"log"
 	"sync"
 
 	"github.com/dimk00z/go-shortener-praktikum/config"
@@ -72,7 +71,7 @@ func (wp *WorkersPool) Run(ctx context.Context) {
 		})
 	}
 	if err := g.Wait(); err != nil {
-		log.Println(err)
+		wp.l.Debug(err)
 	}
 	close(wp.inputCh)
 }

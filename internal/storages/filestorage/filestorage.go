@@ -4,12 +4,12 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
-	"log"
 	"os"
 
 	"github.com/dimk00z/go-shortener-praktikum/internal/models"
 	"github.com/dimk00z/go-shortener-praktikum/internal/shortenererrors"
 	"github.com/dimk00z/go-shortener-praktikum/internal/storages/storageerrors"
+	"github.com/dimk00z/go-shortener-praktikum/pkg/logger"
 )
 
 type webResourse struct {
@@ -27,13 +27,15 @@ type FileStorage struct {
 	fileName  string                 `json:"-"`
 	ShortURLs map[string]webResourse `json:"short_urls"`
 	UsersData map[string][]UserURL   `json:"users_data"`
+	l         *logger.Logger
 }
 
-func NewFileStorage(filename string) (st *FileStorage) {
+func NewFileStorage(l *logger.Logger, filename string) (st *FileStorage) {
 	storage := &FileStorage{
 		ShortURLs: make(map[string]webResourse),
 		UsersData: make(map[string][]UserURL),
 		fileName:  filename,
+		l:         l,
 	}
 	storage.load()
 	return storage
@@ -43,15 +45,15 @@ func (st *FileStorage) load() {
 	var err error
 	file, err := os.OpenFile(st.fileName, os.O_RDONLY|os.O_CREATE, 0644)
 	if err != nil {
-		log.Panicln(err)
+		st.l.Fatal(err)
 	}
 	defer file.Close()
 	decoder := json.NewDecoder(file)
 	if err := decoder.Decode(&st); err != nil {
-		log.Println(err)
+		st.l.Debug(err)
 	}
-	log.Printf("%+v\n", st)
-	log.Println("Loaded from", st.fileName)
+	st.l.Debug("%+v\n", st)
+	st.l.Debug("Loaded from", st.fileName)
 }
 
 func (st *FileStorage) SaveURL(URL string, shortURL string, userID string) (err error) {
@@ -65,7 +67,7 @@ func (st *FileStorage) SaveURL(URL string, shortURL string, userID string) (err 
 		IsDeleted: false,
 	}
 	st.ShortURLs[shortURL] = wb
-	log.Println(shortURL, st.ShortURLs[shortURL])
+	st.l.Debug(shortURL, st.ShortURLs[shortURL])
 
 	if _, ok := st.UsersData[userID]; !ok {
 		st.UsersData[userID] = make([]UserURL, 0)
@@ -77,7 +79,7 @@ func (st *FileStorage) SaveURL(URL string, shortURL string, userID string) (err 
 
 	err = st.updateFile()
 	if err != nil {
-		log.Println(err)
+		st.l.Debug(err)
 	}
 	return
 }
@@ -89,7 +91,7 @@ func (st *FileStorage) SaveBatch(
 	for index, row := range batch {
 		err := st.SaveURL(row.OriginalURL, row.ShortURL, user)
 		if err != nil {
-			log.Println(err)
+			st.l.Debug(err)
 		}
 		result[index].CorrelationID = row.CorrelationID
 		result[index].ShortURL = row.ShortURL
@@ -104,7 +106,7 @@ func (st *FileStorage) GetByShortURL(requiredURL string) (URL string, err error)
 		webResourse.Counter += 1
 		st.ShortURLs[requiredURL] = webResourse
 
-		log.Println(st.ShortURLs[requiredURL])
+		st.l.Debug(st.ShortURLs[requiredURL])
 		if webResourse.IsDeleted {
 			err = shortenererrors.ErrURLDeleted
 		}
@@ -117,30 +119,30 @@ func (st *FileStorage) GetByShortURL(requiredURL string) (URL string, err error)
 func (st *FileStorage) updateFile() error {
 	file, err := os.OpenFile(st.fileName, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0644)
 	if err != nil {
-		log.Println(err)
+		st.l.Debug(err)
 		return err
 	}
 	defer func() {
 		err := file.Close()
 		if err != nil {
-			log.Println(err)
+			st.l.Debug(err)
 		}
 	}()
 	encoder := json.NewEncoder(file)
 	encoder.SetEscapeHTML(false)
 	err = encoder.Encode(&st)
 	if err != nil {
-		log.Println(err)
+		st.l.Debug(err)
 	}
 	err = file.Sync()
 	if err != nil {
-		log.Println(err)
+		st.l.Debug(err)
 	}
 	return nil
 }
 func (st *FileStorage) Close() (err error) {
 	err = st.updateFile()
-	log.Println("Filestorage closed correctly")
+	st.l.Debug("Filestorage closed correctly")
 
 	return err
 }
@@ -160,7 +162,7 @@ func (st *FileStorage) GetUserURLs(user string) (result models.UserURLs, err err
 			URL: userURL.URL}
 	}
 
-	log.Println(user, result)
+	st.l.Debug(user, result)
 
 	return
 }
@@ -173,7 +175,7 @@ func (st *FileStorage) DeleteBatch(ctx context.Context, batch models.BatchForDel
 	}
 	err = st.updateFile()
 	if err != nil {
-		log.Println(err)
+		st.l.Debug(err)
 	}
 	return
 }

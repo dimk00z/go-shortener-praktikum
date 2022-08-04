@@ -13,6 +13,7 @@ import (
 	"github.com/dimk00z/go-shortener-praktikum/internal/models"
 	"github.com/dimk00z/go-shortener-praktikum/internal/shortenererrors"
 	"github.com/dimk00z/go-shortener-praktikum/internal/storages/storageerrors"
+	"github.com/dimk00z/go-shortener-praktikum/pkg/logger"
 	"github.com/gofrs/uuid"
 	"github.com/jackc/pgconn"
 	"github.com/jackc/pgerrcode"
@@ -22,28 +23,29 @@ import (
 
 type DataBaseStorage struct {
 	db *sql.DB
+	l  *logger.Logger
 }
 
-func NewDataBaseStorage(storageConfig config.Storage) *DataBaseStorage {
-	st := &DataBaseStorage{}
+func NewDataBaseStorage(l *logger.Logger, storageConfig config.Storage) *DataBaseStorage {
+	st := &DataBaseStorage{l: l}
 	b := backoff.WithMaxRetries(backoff.NewExponentialBackOff(), uint64(storageConfig.MaxRetries))
 	operation := func() error {
-		log.Println("Trying to connect to DB")
+		l.Debug("Trying to connect to DB")
 		db, err := sql.Open("pgx", storageConfig.DataSourceName)
 		if err != nil {
-			log.Println(err)
+			l.Debug(err)
 			return err
 		}
 		if err = db.Ping(); err != nil {
-			log.Println(err)
+			l.Debug(err)
 			return err
 		}
-		log.Println("DB connection is established")
+		l.Debug("DB connection is established")
 		st.db = db
 		return nil
 	}
 	if err := backoff.Retry(operation, b); err != nil {
-		log.Panicln(err)
+		l.Fatal(err)
 	}
 	return st
 }
@@ -51,9 +53,9 @@ func NewDataBaseStorage(storageConfig config.Storage) *DataBaseStorage {
 func (st *DataBaseStorage) Close() (err error) {
 	err = st.db.Close()
 	if err != nil {
-		log.Println(err)
+		st.l.Debug(err)
 	} else {
-		log.Println("Database connection closed correctly")
+		st.l.Debug("Database connection closed correctly")
 	}
 	return
 }
@@ -63,7 +65,7 @@ func (st *DataBaseStorage) GetUserURLs(user string) (result models.UserURLs, err
 	defer cancel()
 	rows, err := st.db.QueryContext(ctx, getUserURLsQuery, user)
 	if err != nil {
-		log.Println(err)
+		st.l.Debug(err)
 		return
 	}
 	defer rows.Close()
@@ -78,7 +80,7 @@ func (st *DataBaseStorage) GetUserURLs(user string) (result models.UserURLs, err
 	}
 	err = rows.Err()
 	if err != nil {
-		log.Println(err)
+		st.l.Debug(err)
 	}
 	return
 }
@@ -105,11 +107,11 @@ func (st *DataBaseStorage) GetByShortURL(requiredURL string) (URL string, err er
 		err = errors.New(requiredURL + " does not exist")
 		return
 	}
-	log.Println(result, err)
+	st.l.Debug(result, err)
 	URL = result.URL
 	_, err = st.db.Exec(updateCounterQuery, result.counter+1, result.webResourseID)
 	if err != nil {
-		log.Println(err)
+		st.l.Debug(err)
 	}
 	err = nil
 	if result.isDeleted {
@@ -122,7 +124,7 @@ func (st *DataBaseStorage) saveUser(userID string) {
 	if !checkValueExists(st.db, "user", "user_id", userID) {
 		_, err := st.db.Exec(insertUserQuery, userID)
 		if err != nil {
-			log.Println(err)
+			st.l.Debug(err)
 		}
 	}
 }
@@ -131,7 +133,7 @@ func (st *DataBaseStorage) SaveURL(URL string, shortURL string, userID string) (
 	st.saveUser(userID)
 	webResourseUUID, err := uuid.NewV4()
 	if err != nil {
-		log.Println(err)
+		st.l.Debug(err)
 	}
 	_, err = st.db.Exec(insertWebResourseQuery,
 		webResourseUUID.String(), URL, shortURL, "0", userID)
@@ -139,7 +141,7 @@ func (st *DataBaseStorage) SaveURL(URL string, shortURL string, userID string) (
 	if err == nil {
 		return
 	}
-	log.Println(err)
+	st.l.Debug(err)
 	if pqerr, ok := err.(*pgconn.PgError); ok {
 		if pgerrcode.IsIntegrityConstraintViolation(pqerr.Code) {
 			return storageerrors.ErrURLAlreadySave
@@ -156,26 +158,26 @@ func (st *DataBaseStorage) SaveBatch(
 	result = make(models.BatchShortURLs, len(batch))
 	tx, err := st.db.Begin()
 	if err != nil {
-		log.Println(err)
+		st.l.Debug(err)
 		return
 	}
 	defer func(tx *sql.Tx) {
 		err := tx.Rollback()
-		log.Println(err)
+		st.l.Debug(err)
 	}(tx)
 
 	stmt, err := tx.PrepareContext(context.Background(), insertWebResourseBatchQuery)
 	defer func(stmt *sql.Stmt) {
 		err := stmt.Close()
 		if err != nil {
-			log.Println("Close statement error")
+			st.l.Debug("Close statement error")
 		}
 	}(stmt)
 
 	for index, row := range batch {
 		webResourseUUID, err := uuid.NewV4()
 		if err != nil {
-			log.Println(err)
+			st.l.Debug(err)
 		}
 		result[index].ShortURL = row.ShortURL
 		result[index].CorrelationID = row.CorrelationID
@@ -187,13 +189,13 @@ func (st *DataBaseStorage) SaveBatch(
 			row.ShortURL,
 			0,
 			userID); err != nil {
-			log.Println(err)
+			st.l.Debug(err)
 		}
 	}
 
 	err = tx.Commit()
 	if err != nil {
-		log.Println(err)
+		st.l.Debug(err)
 	}
 	return
 }
@@ -205,26 +207,26 @@ func (st *DataBaseStorage) CheckConnection(ctx context.Context) error {
 func (st *DataBaseStorage) DeleteBatch(ctx context.Context, batch models.BatchForDelete, user string) (err error) {
 	tx, err := st.db.Begin()
 	if err != nil {
-		log.Println(err)
+		st.l.Debug(err)
 		return
 	}
 	defer func(tx *sql.Tx) {
 		err := tx.Rollback()
-		log.Println(err)
+		st.l.Debug(err)
 	}(tx)
 	stmt, err := tx.PrepareContext(ctx, batchUpdate)
 	defer func(stmt *sql.Stmt) {
 		err := stmt.Close()
 		if err != nil {
-			log.Println("Close statement error")
+			st.l.Debug("Close statement error")
 		}
 	}(stmt)
 	if _, err = stmt.ExecContext(
 		ctx, pq.Array(batch), user); err != nil {
-		log.Println(err)
+		st.l.Debug(err)
 	}
 	err = tx.Commit()
-	log.Println("deleted from DB", batch)
+	st.l.Debug("deleted from DB", batch)
 	return
 }
 

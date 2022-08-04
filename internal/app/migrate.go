@@ -18,7 +18,7 @@ const (
 	_defaultTimeout  = time.Second
 )
 
-func doMigrations(databaseURL string, l *logger.Logger) {
+func doMigrations(l *logger.Logger, databaseURL string) {
 	sslMode := "?sslmode=disable"
 	if !strings.Contains(databaseURL, sslMode) {
 		databaseURL += sslMode

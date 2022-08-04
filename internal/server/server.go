@@ -2,7 +2,6 @@ package server
 
 import (
 	"context"
-	"log"
 	"net/http"
 	"os"
 	"os/signal"
@@ -38,7 +37,7 @@ func NewServer(l *logger.Logger, port string, wp worker.IWorkerPool, secretKey s
 func (s *ShortenerServer) mountMiddleware() {
 	// Mount all Middleware here
 	cookieHandler := cookie.CookieHandler{
-		SecretKey: s.secretKey,
+		SecretKey: s.secretKey, L: s.l,
 	}
 	decompressHandler := decompressor.DecompressHandler{}
 
@@ -63,6 +62,7 @@ func (s *ShortenerServer) MountHandlers(host string, st storageinterface.Storage
 		handlers.SetHost(host),
 		handlers.SetStorage(st),
 		handlers.SetWorkerPool(s.wp),
+		handlers.SetLoger(s.l),
 	}
 
 	for _, opt := range handlerOptions {
@@ -101,7 +101,7 @@ func (s ShortenerServer) RunServer(ctx context.Context, cancel context.CancelFun
 		s.l.Debug("Server started at " + s.port)
 		err := http.ListenAndServe(s.port, s.Router)
 		if err != nil {
-			log.Println(err)
+			s.l.Debug(err)
 		}
 		cancel()
 	}()
@@ -115,5 +115,5 @@ func (s ShortenerServer) RunServer(ctx context.Context, cancel context.CancelFun
 }
 
 func (s ShortenerServer) ShutDown() {
-	log.Print("Server closed")
+	s.l.Debug("Server closed")
 }

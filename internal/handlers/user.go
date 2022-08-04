@@ -3,7 +3,6 @@ package handlers
 import (
 	"context"
 	"encoding/json"
-	"log"
 	"net/http"
 
 	"github.com/dimk00z/go-shortener-praktikum/internal/middleware/cookie"
@@ -17,7 +16,7 @@ func (h ShortenerHandler) GetUserURLs(w http.ResponseWriter, r *http.Request) {
 	userIDCtx := r.Context().Value(cookie.UserIDCtxName).(string)
 	userURLs, err := h.Storage.GetUserURLs(userIDCtx)
 	if err != nil {
-		log.Println(err)
+		h.l.Debug(err)
 		resultStatus = http.StatusNoContent
 	}
 	results := make([]models.UserURL, len(userURLs))
@@ -27,7 +26,7 @@ func (h ShortenerHandler) GetUserURLs(w http.ResponseWriter, r *http.Request) {
 			URL:      userURL.URL,
 		}
 	}
-	log.Println(results)
+	h.l.Debug(results)
 	util.JSONResponse(w, results, resultStatus)
 
 }
@@ -44,7 +43,7 @@ func (h ShortenerHandler) DeleteUserURLs(w http.ResponseWriter, r *http.Request)
 		util.JSONError(w, err.Error(), http.StatusBadRequest)
 		return
 	}
-	log.Println(shortURLs)
+	h.l.Debug(shortURLs)
 
 	deleteBatchTask := func(ctx context.Context) error {
 		return h.Storage.DeleteBatch(ctx, shortURLs, userIDCtx)

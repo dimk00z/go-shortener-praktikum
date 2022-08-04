@@ -5,7 +5,6 @@ import (
 	"errors"
 	"fmt"
 	"io/ioutil"
-	"log"
 	"net/http"
 
 	"github.com/dimk00z/go-shortener-praktikum/internal/middleware/cookie"
@@ -18,12 +17,12 @@ import (
 
 func (h ShortenerHandler) GetByShortURL(w http.ResponseWriter, r *http.Request) {
 	shortURL := chi.URLParam(r, "shortURL")
-	log.Println("Get " + shortURL + " shortURL")
+	h.l.Debug("Get " + shortURL + " shortURL")
 	var err error
 	shortURL, err = h.Storage.GetByShortURL(shortURL)
 	statusCode := http.StatusTemporaryRedirect
 	if err != nil {
-		log.Println(shortURL, err)
+		h.l.Debug(shortURL, err)
 
 		if errors.Is(err, shortenererrors.ErrURLNotFound) {
 			statusCode = http.StatusNotFound
@@ -67,7 +66,7 @@ func (h ShortenerHandler) PostShortURL(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(resultStatus)
 	_, err = w.Write([]byte(fmt.Sprintf("%s/%s", h.host, shortURL)))
 	if err != nil {
-		log.Fatal(err)
+		h.l.Debug(err)
 	}
 }
 
@@ -119,7 +118,7 @@ func (h ShortenerHandler) SaveBatch(w http.ResponseWriter, r *http.Request) {
 	for index, field := range requestData {
 		requestData[index].ShortURL = util.ShortenLink(field.OriginalURL)
 	}
-	log.Println(requestData)
+	h.l.Debug(requestData)
 	userIDCtx := r.Context().Value(cookie.UserIDCtxName).(string)
 	resultURLs, err := h.Storage.SaveBatch(requestData, userIDCtx)
 	if err != nil {

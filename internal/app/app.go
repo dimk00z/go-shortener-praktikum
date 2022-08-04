@@ -23,10 +23,10 @@ func StartApp(config *config.Config) {
 	server := server.NewServer(l, config.Server.Port, wp, config.Security.SecretKey)
 
 	if config.Storage.DataSourceName != "" {
-		doMigrations(config.Storage.DataSourceName, l)
+		doMigrations(l, config.Storage.DataSourceName)
 	}
 
-	storage := storagedi.GetStorage(config.Storage)
+	storage := storagedi.GetStorage(l, config.Storage)
 
 	server.MountHandlers(host, storage)
 	defer shutDown(wp, storage, server)

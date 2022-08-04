@@ -2,10 +2,10 @@ package cookie
 
 import (
 	"context"
-	"log"
 	"net/http"
 
 	"github.com/dimk00z/go-shortener-praktikum/internal/util"
+	"github.com/dimk00z/go-shortener-praktikum/pkg/logger"
 	uuid "github.com/satori/go.uuid"
 )
 
@@ -21,24 +21,25 @@ const (
 
 type CookieHandler struct {
 	SecretKey string
+	L         *logger.Logger
 }
 
 func (h *CookieHandler) Handle(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		cookieUserID := util.GetCookieParam(cookieUserIDField, r)
-		log.Println(cookieUserID)
+		h.L.Debug(cookieUserID)
 		if cookieUserID != "" {
 			gotUUID := uuid.FromStringOrNil(cookieUserID[:uuidStringLength])
 			requiredSign := util.GetSign(gotUUID.Bytes(), h.SecretKey)
 			checkSign := cookieUserID[signSentencePosition:] == requiredSign
-			log.Println("Sign check status:", checkSign)
+			h.L.Debug("Sign check status:", checkSign)
 			if checkSign {
 				next.ServeHTTP(w, r.WithContext(context.WithValue(r.Context(), UserIDCtxName, gotUUID.String())))
 				return
 			}
 		}
 		userID := uuid.NewV4()
-		log.Printf("User id: %s\n", userID)
+		h.L.Debug("User id: %s\n", userID)
 		stringSign := util.GetSign(userID.Bytes(), h.SecretKey)
 		cookieUserID = userID.String()
 		cookie := &http.Cookie{
