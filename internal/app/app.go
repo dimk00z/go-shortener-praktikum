@@ -3,26 +3,27 @@ package app
 import (
 	"context"
 
+	"github.com/dimk00z/go-shortener-praktikum/config"
 	"github.com/dimk00z/go-shortener-praktikum/internal/server"
-	"github.com/dimk00z/go-shortener-praktikum/internal/settings"
 	"github.com/dimk00z/go-shortener-praktikum/internal/storages/storagedi"
 	"github.com/dimk00z/go-shortener-praktikum/internal/storages/storageinterface"
 	"github.com/dimk00z/go-shortener-praktikum/internal/worker"
 	"github.com/dimk00z/go-shortener-praktikum/pkg/logger"
 )
 
-func StartApp() {
-	config := settings.LoadConfig()
-	l := logger.New(config.Loger.Level)
+func StartApp(config *config.Config) {
+
+	l := logger.New(config.Log.Level)
 
 	l.Debug("%+v\n", config)
 
 	host := config.Server.Host
-	wp := worker.GetWorkersPool(config.Workers)
-	server := server.NewServer(config.Server.Port, wp)
 
-	if config.Storage.DBStorage.DataSourceName != "" {
-		doMigrations(config.Storage.DBStorage.DataSourceName, l)
+	wp := worker.GetWorkersPool(config.Workers)
+	server := server.NewServer(config.Server.Port, wp, config.Security.SecretKey)
+
+	if config.Storage.DataSourceName != "" {
+		doMigrations(config.Storage.DataSourceName, l)
 	}
 
 	storage := storagedi.GetStorage(config.Storage)

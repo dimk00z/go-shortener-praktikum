@@ -11,7 +11,6 @@ import (
 	"github.com/dimk00z/go-shortener-praktikum/internal/handlers"
 	"github.com/dimk00z/go-shortener-praktikum/internal/middleware/cookie"
 	"github.com/dimk00z/go-shortener-praktikum/internal/middleware/decompressor"
-	"github.com/dimk00z/go-shortener-praktikum/internal/settings"
 	"github.com/dimk00z/go-shortener-praktikum/internal/storages/storageinterface"
 	"github.com/dimk00z/go-shortener-praktikum/internal/worker"
 	"github.com/go-chi/chi"
@@ -19,22 +18,24 @@ import (
 )
 
 type ShortenerServer struct {
-	port   string
-	Router *chi.Mux
-	wp     worker.IWorkerPool
+	port      string
+	Router    *chi.Mux
+	wp        worker.IWorkerPool
+	secretKey string
 }
 
-func NewServer(port string, wp worker.IWorkerPool) *ShortenerServer {
+func NewServer(port string, wp worker.IWorkerPool, secretKey string) *ShortenerServer {
 	return &ShortenerServer{
-		port:   port,
-		Router: chi.NewRouter(),
-		wp:     wp,
+		port:      port,
+		Router:    chi.NewRouter(),
+		wp:        wp,
+		secretKey: secretKey,
 	}
 }
 func (s *ShortenerServer) mountMiddleware() {
 	// Mount all Middleware here
 	cookieHandler := cookie.CookieHandler{
-		SecretKey: settings.LoadConfig().Security.SecretKey,
+		SecretKey: s.secretKey,
 	}
 	decompressHandler := decompressor.DecompressHandler{}
 

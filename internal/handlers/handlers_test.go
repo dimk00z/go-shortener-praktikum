@@ -4,8 +4,8 @@ import (
 	"net/http"
 	"net/http/httptest"
 
+	"github.com/dimk00z/go-shortener-praktikum/config"
 	"github.com/dimk00z/go-shortener-praktikum/internal/server"
-	"github.com/dimk00z/go-shortener-praktikum/internal/settings"
 	"github.com/dimk00z/go-shortener-praktikum/internal/storages/storageinterface"
 	"github.com/dimk00z/go-shortener-praktikum/internal/worker"
 )
@@ -23,12 +23,12 @@ func execRequest(req *http.Request, s *server.ShortenerServer) *httptest.Respons
 }
 
 func getMockWorkersPool() worker.IWorkerPool {
-	return worker.GetWorkersPool(settings.WorkersConfig{WorkersNumber: 2, PoolLength: 10})
+	return worker.GetWorkersPool(config.Workers{WorkersNumber: 2, PoolLength: 10})
 }
 
 func createMockServer(mockStorage storageinterface.Storage, wp worker.IWorkerPool) *server.ShortenerServer {
 	server := server.NewServer(
-		shortenerPort, wp)
+		shortenerPort, wp, "MockSecret")
 	server.MountHandlers(host, mockStorage)
 	return server
 }

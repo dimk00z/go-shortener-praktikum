@@ -3,7 +3,7 @@ package storagedi
 import (
 	"sync"
 
-	"github.com/dimk00z/go-shortener-praktikum/internal/settings"
+	"github.com/dimk00z/go-shortener-praktikum/config"
 	"github.com/dimk00z/go-shortener-praktikum/internal/storages/database"
 	"github.com/dimk00z/go-shortener-praktikum/internal/storages/filestorage"
 	"github.com/dimk00z/go-shortener-praktikum/internal/storages/memorystorage"
@@ -15,15 +15,15 @@ var (
 	once sync.Once
 )
 
-func GetStorage(storageConfig settings.StorageConfig) storageinterface.Storage {
+func GetStorage(storageConfig config.Storage) storageinterface.Storage {
 	once.Do(func() {
-		storageConfig := settings.LoadConfig().Storage
-		if storageConfig.DBStorage.DataSourceName != "" {
-			st = database.NewDataBaseStorage(storageConfig.DBStorage)
+
+		if storageConfig.DataSourceName != "" {
+			st = database.NewDataBaseStorage(storageConfig)
 			return
 		}
-		if storageConfig.FileStorage.FilePath != "" {
-			st = filestorage.NewFileStorage(storageConfig.FileStorage.FilePath)
+		if storageConfig.FilePath != "" {
+			st = filestorage.NewFileStorage(storageConfig.FilePath)
 			return
 		}
 		st = memorystorage.NewStorage()

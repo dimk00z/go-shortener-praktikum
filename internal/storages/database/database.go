@@ -9,8 +9,8 @@ import (
 	"time"
 
 	"github.com/cenkalti/backoff"
+	"github.com/dimk00z/go-shortener-praktikum/config"
 	"github.com/dimk00z/go-shortener-praktikum/internal/models"
-	"github.com/dimk00z/go-shortener-praktikum/internal/settings"
 	"github.com/dimk00z/go-shortener-praktikum/internal/shortenererrors"
 	"github.com/dimk00z/go-shortener-praktikum/internal/storages/storageerrors"
 	"github.com/gofrs/uuid"
@@ -24,12 +24,12 @@ type DataBaseStorage struct {
 	db *sql.DB
 }
 
-func NewDataBaseStorage(dbConfig settings.DBStorageConfig) *DataBaseStorage {
+func NewDataBaseStorage(storageConfig config.Storage) *DataBaseStorage {
 	st := &DataBaseStorage{}
-	b := backoff.WithMaxRetries(backoff.NewExponentialBackOff(), uint64(dbConfig.MaxRetries))
+	b := backoff.WithMaxRetries(backoff.NewExponentialBackOff(), uint64(storageConfig.MaxRetries))
 	operation := func() error {
 		log.Println("Trying to connect to DB")
-		db, err := sql.Open("pgx", dbConfig.DataSourceName)
+		db, err := sql.Open("pgx", storageConfig.DataSourceName)
 		if err != nil {
 			log.Println(err)
 			return err

@@ -5,7 +5,7 @@ import (
 	"log"
 	"sync"
 
-	"github.com/dimk00z/go-shortener-praktikum/internal/settings"
+	"github.com/dimk00z/go-shortener-praktikum/config"
 	"golang.org/x/sync/errgroup"
 )
 
@@ -78,7 +78,7 @@ func (wp *WorkersPool) Close() {
 	close(wp.done)
 }
 
-func GetWorkersPool(wpConfig settings.WorkersConfig) IWorkerPool {
+func GetWorkersPool(wpConfig config.Workers) IWorkerPool {
 	once.Do(func() {
 		wp = NewWorkersPool(wpConfig.WorkersNumber, wpConfig.PoolLength)
 	})
