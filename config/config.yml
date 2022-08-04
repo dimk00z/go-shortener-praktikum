@@ -3,7 +3,7 @@ app:
   version: '1.0.0'
 
 http:
-  server_address: '8080'
+  server_address: ':8080'
   base_url: 'http://localhost:8080'
 
 logger:
@@ -12,8 +12,8 @@ logger:
 
 storage:
   pool_max: 2
-  dsn: 'test_dsn'
-  file_storage_path: 'test_file'
+  dsn: ''
+  file_storage_path: ''
   max_retries: 10
 
 security:

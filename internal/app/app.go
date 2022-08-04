@@ -19,8 +19,8 @@ func StartApp(config *config.Config) {
 
 	host := config.Server.Host
 
-	wp := worker.GetWorkersPool(config.Workers)
-	server := server.NewServer(config.Server.Port, wp, config.Security.SecretKey)
+	wp := worker.GetWorkersPool(l, config.Workers)
+	server := server.NewServer(l, config.Server.Port, wp, config.Security.SecretKey)
 
 	if config.Storage.DataSourceName != "" {
 		doMigrations(config.Storage.DataSourceName, l)

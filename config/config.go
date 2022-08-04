@@ -2,7 +2,6 @@ package config
 
 import (
 	"flag"
-	"fmt"
 	"log"
 
 	"github.com/ilyakaznacheev/cleanenv"
@@ -92,6 +91,5 @@ func LoadConfig() *Config {
 	}
 	Cfg.checkFlags()
 
-	fmt.Println(Cfg)
 	return Cfg
 }

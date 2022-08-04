@@ -13,6 +13,7 @@ import (
 	"github.com/dimk00z/go-shortener-praktikum/internal/middleware/decompressor"
 	"github.com/dimk00z/go-shortener-praktikum/internal/storages/storageinterface"
 	"github.com/dimk00z/go-shortener-praktikum/internal/worker"
+	"github.com/dimk00z/go-shortener-praktikum/pkg/logger"
 	"github.com/go-chi/chi"
 	"github.com/go-chi/chi/middleware"
 )
@@ -22,14 +23,16 @@ type ShortenerServer struct {
 	Router    *chi.Mux
 	wp        worker.IWorkerPool
 	secretKey string
+	l         *logger.Logger
 }
 
-func NewServer(port string, wp worker.IWorkerPool, secretKey string) *ShortenerServer {
+func NewServer(l *logger.Logger, port string, wp worker.IWorkerPool, secretKey string) *ShortenerServer {
 	return &ShortenerServer{
 		port:      port,
 		Router:    chi.NewRouter(),
 		wp:        wp,
 		secretKey: secretKey,
+		l:         l,
 	}
 }
 func (s *ShortenerServer) mountMiddleware() {
@@ -95,7 +98,7 @@ func (s ShortenerServer) RunServer(ctx context.Context, cancel context.CancelFun
 	defer s.wp.Close()
 	signal.Notify(interrupt, os.Interrupt, syscall.SIGTERM)
 	go func() {
-		log.Println("Server started at " + s.port)
+		s.l.Debug("Server started at " + s.port)
 		err := http.ListenAndServe(s.port, s.Router)
 		if err != nil {
 			log.Println(err)
@@ -104,7 +107,7 @@ func (s ShortenerServer) RunServer(ctx context.Context, cancel context.CancelFun
 	}()
 	select {
 	case killSignal := <-interrupt:
-		log.Print("Got ", killSignal)
+		s.l.Debug("Got ", killSignal)
 		cancel()
 	case <-ctx.Done():
 	}
