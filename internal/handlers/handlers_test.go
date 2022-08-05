@@ -14,6 +14,8 @@ import (
 const (
 	shortenerPort = ":8080"
 	host          = "http://localhost" + shortenerPort
+	mockSecretKey = "SECRET_KEY"
+	mockUserID    = "7f69f562-e035-41cf-a07e-14e5606f4fbf"
 )
 
 func execRequest(req *http.Request, s *server.ShortenerServer) *httptest.ResponseRecorder {
@@ -32,7 +34,7 @@ func getMockWorkersPool() worker.IWorkerPool {
 
 func createMockServer(mockStorage storageinterface.Storage, wp worker.IWorkerPool) *server.ShortenerServer {
 	server := server.NewServer(getMockLogger(),
-		shortenerPort, wp, "MockSecret")
+		shortenerPort, wp, mockSecretKey)
 	server.MountHandlers(host, mockStorage)
 	return server
 }

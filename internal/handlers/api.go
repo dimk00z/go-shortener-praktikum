@@ -79,14 +79,22 @@ func (h ShortenerHandler) SaveJSON(w http.ResponseWriter, r *http.Request) {
 
 	if err := json.NewDecoder(r.Body).Decode(&u); err != nil {
 		util.JSONError(w, err.Error(), http.StatusBadRequest)
+		h.l.Debug("ShortenerHandler - SaveJSON - json.NewDecoder: %w", err)
 		return
 	}
 	if u.URL == "" {
-		util.JSONError(w, "Request doesn't contain url field", http.StatusBadRequest)
+		errMessage := "Request doesn't contain url field"
+		util.JSONError(w, errMessage, http.StatusBadRequest)
+		h.l.Debug("ShortenerHandler - SaveJSON: %s", errMessage)
+
 		return
 	}
 	if !util.IsURL(u.URL) {
-		util.JSONError(w, "Wrong URL given -"+u.URL, http.StatusBadRequest)
+		errMessage := "Wrong URL given -" + u.URL
+
+		util.JSONError(w, errMessage, http.StatusBadRequest)
+		h.l.Debug("ShortenerHandler - SaveJSON: %s", errMessage)
+
 		return
 	}
 	shortURL := util.ShortenLink(u.URL)

@@ -12,8 +12,8 @@ import (
 type ContextType string
 
 const (
-	cookieUserIDField                = "user_id"
-	cookieMaxAge                     = 864000
+	CookieUserIDField                = "user_id"
+	CookieMaxAge                     = 864000
 	uuidStringLength                 = 36
 	signSentencePosition             = 37
 	UserIDCtxName        ContextType = "ctxUserId"
@@ -26,7 +26,7 @@ type CookieHandler struct {
 
 func (h *CookieHandler) Handle(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		cookieUserID := util.GetCookieParam(cookieUserIDField, r)
+		cookieUserID := util.GetCookieParam(CookieUserIDField, r)
 		h.L.Debug(cookieUserID)
 		if cookieUserID != "" {
 			gotUUID := uuid.FromStringOrNil(cookieUserID[:uuidStringLength])
@@ -43,9 +43,9 @@ func (h *CookieHandler) Handle(next http.Handler) http.Handler {
 		stringSign := util.GetSign(userID.Bytes(), h.SecretKey)
 		cookieUserID = userID.String()
 		cookie := &http.Cookie{
-			Name:   cookieUserIDField,
+			Name:   CookieUserIDField,
 			Value:  cookieUserID + "|" + stringSign,
-			MaxAge: cookieMaxAge,
+			MaxAge: CookieMaxAge,
 			Path:   "/",
 		}
 		http.SetCookie(w, cookie)
