@@ -11,10 +11,12 @@ import (
 	"github.com/dimk00z/go-shortener-praktikum/internal/middleware/cookie"
 	"github.com/dimk00z/go-shortener-praktikum/internal/middleware/decompressor"
 	"github.com/dimk00z/go-shortener-praktikum/internal/storages/storageinterface"
+	"github.com/dimk00z/go-shortener-praktikum/internal/util"
 	"github.com/dimk00z/go-shortener-praktikum/internal/worker"
 	"github.com/dimk00z/go-shortener-praktikum/pkg/logger"
 	"github.com/go-chi/chi"
 	"github.com/go-chi/chi/middleware"
+	// _ "github.com/swaggo/http-swagger/example/go-chi/docs"
 )
 
 type ShortenerServer struct {
@@ -91,6 +93,13 @@ func (s *ShortenerServer) MountHandlers(host string, st storageinterface.Storage
 		chi.NewRouter().Route("/", func(r chi.Router) {
 			r.Get("/", h.PingDB)
 		}))
+	fileServer := http.FileServer(http.Dir("./docs/"))
+
+	s.Router.HandleFunc("/swagger", func(w http.ResponseWriter, r *http.Request) {
+		http.Redirect(w, r, "/swagger/", http.StatusMovedPermanently)
+	})
+	s.Router.Handle("/swagger/", http.StripPrefix("/swagger", util.ContentType(fileServer)))
+	s.Router.Handle("/swagger/*", http.StripPrefix("/swagger", util.ContentType(fileServer)))
 }
 
 func (s ShortenerServer) RunServer(ctx context.Context, cancel context.CancelFunc, storage storageinterface.Storage) {

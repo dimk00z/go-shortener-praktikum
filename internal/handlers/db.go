@@ -6,6 +6,10 @@ import (
 	"github.com/dimk00z/go-shortener-praktikum/internal/util"
 )
 
+// Check DB connection
+// @Summary Check DB connection
+// @Description Simple pinger
+// @router /ping [get]
 func (h *ShortenerHandler) PingDB(w http.ResponseWriter, r *http.Request) {
 	h.l.Debug("%T\n", h.Storage)
 	message := "connection established"

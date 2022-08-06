@@ -1,0 +1,24 @@
+{
+    "swagger": "2.0",
+    "info": {
+        "description": "Go Shortener project",
+        "title": "Shortener",
+        "contact": {
+            "name": "Kuznetsov Dmitriy",
+            "url": "https://github.com/dimk00z",
+            "email": "dimk0z@yandex.ru"
+        },
+        "version": "1.0.0"
+    },
+    "host": "localhost:8080",
+    "basePath": "/",
+    "paths": {
+        "/ping": {
+            "get": {
+                "description": "Simple pinger",
+                "summary": "Check DB connection",
+                "responses": {}
+            }
+        }
+    }
+}

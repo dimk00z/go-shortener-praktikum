@@ -1,0 +1,17 @@
+basePath: /
+host: localhost:8080
+info:
+  contact:
+    email: dimk0z@yandex.ru
+    name: Kuznetsov Dmitriy
+    url: https://github.com/dimk00z
+  description: Go Shortener project
+  title: Shortener
+  version: 1.0.0
+paths:
+  /ping:
+    get:
+      description: Simple pinger
+      responses: {}
+      summary: Check DB connection
+swagger: "2.0"
