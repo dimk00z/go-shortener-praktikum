@@ -10,6 +10,16 @@ import (
 	"github.com/dimk00z/go-shortener-praktikum/internal/util"
 )
 
+// GetUserURLs godoc
+// @Summary      Get Users URLs
+// @Description  all urls
+// @Accept json
+// @Produce json
+// @Tags         API
+// @Success 200 {object} []models.UserURL
+// @Success 204
+// @Failure 500
+// @router /api/user/urls [get]
 func (h ShortenerHandler) GetUserURLs(w http.ResponseWriter, r *http.Request) {
 
 	resultStatus := http.StatusOK
@@ -31,6 +41,16 @@ func (h ShortenerHandler) GetUserURLs(w http.ResponseWriter, r *http.Request) {
 
 }
 
+// SaveJSON godoc
+// @Summary      Save url by json
+// @Description  delete user URLs
+// @Accept json
+// @Produce json
+// @Tags         API
+// @Param URL body models.BatchForDelete true "URL for deleting"
+// @Success 202 {object} jsonResult
+// @Failure 500
+// @router /api/user/urls [delete]
 func (h ShortenerHandler) DeleteUserURLs(w http.ResponseWriter, r *http.Request) {
 
 	resultStatus := http.StatusAccepted

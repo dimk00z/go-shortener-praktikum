@@ -15,6 +15,16 @@ import (
 	"github.com/go-chi/chi"
 )
 
+// GetByShortURL godoc
+// @Summary      Get by shortURL
+// @Description  get saved URL
+// @Tags         API
+// @Param        shortURL   path      string  true  "shortURL"
+// @Success      307
+// @Failure      404
+// @Failure      410
+// @Failure      500
+// @Router       /{shortURL} [get]
 func (h ShortenerHandler) GetByShortURL(w http.ResponseWriter, r *http.Request) {
 	shortURL := chi.URLParam(r, "shortURL")
 	h.l.Debug("Get " + shortURL + " shortURL")
@@ -38,6 +48,16 @@ func (h ShortenerHandler) GetByShortURL(w http.ResponseWriter, r *http.Request) 
 
 }
 
+// PostShortURL godoc
+// @Summary      Save url
+// @Description  post URL for saving
+// @Tags         API
+// @Param url body string true "URLforSave"
+// @Success      307
+// @Failure      400
+// @Failure      409
+// @Failure      500
+// @Router       / [post]
 func (h ShortenerHandler) PostShortURL(w http.ResponseWriter, r *http.Request) {
 
 	if err := util.RequestBodyCheck(w, r); err != nil {
@@ -70,6 +90,22 @@ func (h ShortenerHandler) PostShortURL(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+type jsonResult struct {
+	Result string `json:"result"`
+}
+
+// SaveJSON godoc
+// @Summary      Save url by json
+// @Description  post URL for saving
+// @Accept json
+// @Produce json
+// @Tags         API
+// @Param URL body models.URLRequest true "URL for shorting"
+// @Success 201 {object} jsonResult
+// @Failure 400
+// @Failure 409
+// @Failure 500
+// @router /api/shortener [post]
 func (h ShortenerHandler) SaveJSON(w http.ResponseWriter, r *http.Request) {
 	if err := util.RequestBodyCheck(w, r); err != nil {
 		return
@@ -105,15 +141,24 @@ func (h ShortenerHandler) SaveJSON(w http.ResponseWriter, r *http.Request) {
 	if errors.Is(err, storageerrors.ErrURLAlreadySave) {
 		resultStatus = http.StatusConflict
 	}
-	util.JSONResponse(w, struct {
-		Result string `json:"result"`
-	}{
+	util.JSONResponse(w, jsonResult{
 		Result: fmt.Sprintf("%s/%s", h.host, shortURL),
 	}, resultStatus)
 
 }
 
-// Sprint 3 Increment 12
+// SaveBatch godoc
+// @Summary      Save url by json
+// @Description  post URL for saving
+// @Accept json
+// @Produce json
+// @Tags         API
+// @Param batchURLs body models.BatchURLs true "URLs for shorting"
+// @Success 201 {object} jsonResult
+// @Failure 400
+// @Failure 409
+// @Failure 500
+// @router /api/shortener/batch [post]
 func (h ShortenerHandler) SaveBatch(w http.ResponseWriter, r *http.Request) {
 	if err := util.RequestBodyCheck(w, r); err != nil {
 		return

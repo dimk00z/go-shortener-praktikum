@@ -6,8 +6,11 @@ import (
 	"github.com/dimk00z/go-shortener-praktikum/internal/util"
 )
 
+// PingDB godoc
 // Check DB connection
 // @Summary Check DB connection
+// @Tags         DB
+// @Produce json
 // @Description Simple pinger
 // @router /ping [get]
 func (h *ShortenerHandler) PingDB(w http.ResponseWriter, r *http.Request) {

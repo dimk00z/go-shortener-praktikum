@@ -1,4 +1,22 @@
 basePath: /
+definitions:
+  handlers.jsonResult:
+    properties:
+      result:
+        type: string
+    type: object
+  models.URLRequest:
+    properties:
+      url:
+        type: string
+    type: object
+  models.UserURL:
+    properties:
+      original_url:
+        type: string
+      short_url:
+        type: string
+    type: object
 host: localhost:8080
 info:
   contact:
@@ -9,9 +27,165 @@ info:
   title: Shortener
   version: 1.0.0
 paths:
+  /:
+    post:
+      description: post URL for saving
+      parameters:
+      - description: URLforSave
+        in: body
+        name: url
+        required: true
+        schema:
+          type: string
+      responses:
+        "307":
+          description: Temporary Redirect
+        "400":
+          description: Bad Request
+        "409":
+          description: Conflict
+        "500":
+          description: Internal Server Error
+      summary: Save url
+      tags:
+      - API
+  /{shortURL}:
+    get:
+      description: get saved URL
+      parameters:
+      - description: shortURL
+        in: path
+        name: shortURL
+        required: true
+        type: string
+      responses:
+        "307":
+          description: Temporary Redirect
+        "404":
+          description: Not Found
+        "410":
+          description: Gone
+        "500":
+          description: Internal Server Error
+      summary: Get by shortURL
+      tags:
+      - API
+  /api/shortener:
+    post:
+      consumes:
+      - application/json
+      description: post URL for saving
+      parameters:
+      - description: URL for shorting
+        in: body
+        name: URL
+        required: true
+        schema:
+          $ref: '#/definitions/models.URLRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/handlers.jsonResult'
+        "400":
+          description: Bad Request
+        "409":
+          description: Conflict
+        "500":
+          description: Internal Server Error
+      summary: Save url by json
+      tags:
+      - API
+  /api/shortener/batch:
+    post:
+      consumes:
+      - application/json
+      description: post URL for saving
+      parameters:
+      - description: URLs for shorting
+        in: body
+        name: batchURLs
+        required: true
+        schema:
+          items:
+            properties:
+              correlation_id:
+                type: string
+              original_url:
+                type: string
+            type: object
+          type: array
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/handlers.jsonResult'
+        "400":
+          description: Bad Request
+        "409":
+          description: Conflict
+        "500":
+          description: Internal Server Error
+      summary: Save url by json
+      tags:
+      - API
+  /api/user/urls:
+    delete:
+      consumes:
+      - application/json
+      description: delete user URLs
+      parameters:
+      - description: URL for deleting
+        in: body
+        name: URL
+        required: true
+        schema:
+          items:
+            type: string
+          type: array
+      produces:
+      - application/json
+      responses:
+        "202":
+          description: Accepted
+          schema:
+            $ref: '#/definitions/handlers.jsonResult'
+        "500":
+          description: Internal Server Error
+      summary: Save url by json
+      tags:
+      - API
+    get:
+      consumes:
+      - application/json
+      description: all urls
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/models.UserURL'
+            type: array
+        "204":
+          description: No Content
+        "500":
+          description: Internal Server Error
+      summary: Get Users URLs
+      tags:
+      - API
   /ping:
     get:
       description: Simple pinger
+      produces:
+      - application/json
       responses: {}
       summary: Check DB connection
+      tags:
+      - DB
 swagger: "2.0"
