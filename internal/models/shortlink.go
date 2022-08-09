@@ -5,6 +5,7 @@ type BatchURLs []struct {
 	OriginalURL   string `json:"original_url"`
 	ShortURL      string `json:"-"`
 }
+
 type BatchForDelete []string
 
 type BatchShortURLs []struct {
@@ -18,3 +19,7 @@ type UserURL struct {
 }
 
 type UserURLs []UserURL
+
+type URLRequest struct {
+	URL string `json:"url"`
+}

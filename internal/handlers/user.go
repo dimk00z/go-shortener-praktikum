@@ -3,37 +3,30 @@ package handlers
 import (
 	"context"
 	"encoding/json"
-	"log"
 	"net/http"
 
 	"github.com/dimk00z/go-shortener-praktikum/internal/middleware/cookie"
 	"github.com/dimk00z/go-shortener-praktikum/internal/models"
-	"github.com/dimk00z/go-shortener-praktikum/internal/storages/storageinterface"
 	"github.com/dimk00z/go-shortener-praktikum/internal/util"
-	"github.com/dimk00z/go-shortener-praktikum/internal/worker"
 )
 
-type UserHandler struct {
-	Storage storageinterface.Storage
-	host    string
-	wp      worker.IWorkerPool
-}
-
-func NewUserHandler(host string, st storageinterface.Storage, wp worker.IWorkerPool) *UserHandler {
-	return &UserHandler{
-		Storage: st,
-		host:    host,
-		wp:      wp,
-	}
-}
-
-func (h UserHandler) GetUserURLs(w http.ResponseWriter, r *http.Request) {
+// GetUserURLs godoc
+// @Summary      Get Users URLs
+// @Description  all urls
+// @Accept json
+// @Produce json
+// @Tags         API
+// @Success 200 {object} []models.UserURL
+// @Success 204
+// @Failure 500
+// @router /api/user/urls [get]
+func (h ShortenerHandler) GetUserURLs(w http.ResponseWriter, r *http.Request) {
 
 	resultStatus := http.StatusOK
 	userIDCtx := r.Context().Value(cookie.UserIDCtxName).(string)
 	userURLs, err := h.Storage.GetUserURLs(userIDCtx)
 	if err != nil {
-		log.Println(err)
+		h.l.Debug(err)
 		resultStatus = http.StatusNoContent
 	}
 	results := make([]models.UserURL, len(userURLs))
@@ -43,12 +36,22 @@ func (h UserHandler) GetUserURLs(w http.ResponseWriter, r *http.Request) {
 			URL:      userURL.URL,
 		}
 	}
-	log.Println(results)
+	h.l.Debug(results)
 	util.JSONResponse(w, results, resultStatus)
 
 }
 
-func (h UserHandler) DeleteUserURLs(w http.ResponseWriter, r *http.Request) {
+// SaveJSON godoc
+// @Summary      Save url by json
+// @Description  delete user URLs
+// @Accept json
+// @Produce json
+// @Tags         API
+// @Param URL body models.BatchForDelete true "URL for deleting"
+// @Success 202 {object} jsonResult
+// @Failure 500
+// @router /api/user/urls [delete]
+func (h ShortenerHandler) DeleteUserURLs(w http.ResponseWriter, r *http.Request) {
 
 	resultStatus := http.StatusAccepted
 	if err := util.RequestBodyCheck(w, r); err != nil {
@@ -60,9 +63,8 @@ func (h UserHandler) DeleteUserURLs(w http.ResponseWriter, r *http.Request) {
 		util.JSONError(w, err.Error(), http.StatusBadRequest)
 		return
 	}
-	log.Println(shortURLs)
+	h.l.Debug(shortURLs)
 
-	// TODO проверить удаление удаление сюда!
 	deleteBatchTask := func(ctx context.Context) error {
 		return h.Storage.DeleteBatch(ctx, shortURLs, userIDCtx)
 	}

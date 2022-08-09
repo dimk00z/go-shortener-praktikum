@@ -1,0 +1,24 @@
+app:
+  name: 'go-shortener-praktikum'
+  version: '1.0.0'
+
+http:
+  server_address: ':8080'
+  base_url: 'http://localhost:8080'
+
+logger:
+  log_level: 'debug'
+  rollbar_env: 'go-shortener-praktikum'
+
+storage:
+  pool_max: 2
+  dsn: ''
+  file_storage_path: ''
+  max_retries: 10
+
+security:
+  secret_key: 'SECRET_KEY'
+
+workers:
+  workers_number: 5
+  pool_length: 10

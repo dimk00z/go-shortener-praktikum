@@ -2,10 +2,10 @@ package worker
 
 import (
 	"context"
-	"log"
 	"sync"
 
-	"github.com/dimk00z/go-shortener-praktikum/internal/settings"
+	"github.com/dimk00z/go-shortener-praktikum/config"
+	"github.com/dimk00z/go-shortener-praktikum/pkg/logger"
 	"golang.org/x/sync/errgroup"
 )
 
@@ -18,6 +18,7 @@ type WorkersPool struct {
 	workersNumber int
 	inputCh       chan func(ctx context.Context) error
 	done          chan struct{}
+	l             *logger.Logger
 }
 
 var (
@@ -25,11 +26,12 @@ var (
 	once sync.Once
 )
 
-func NewWorkersPool(workersNumber int, poolLength int) *WorkersPool {
+func NewWorkersPool(workersNumber int, poolLength int, l *logger.Logger) *WorkersPool {
 	return &WorkersPool{
 		workersNumber: workersNumber,
 		inputCh:       make(chan func(ctx context.Context) error, poolLength),
 		done:          make(chan struct{}),
+		l:             l,
 	}
 }
 
@@ -37,23 +39,23 @@ func (wp *WorkersPool) Push(task func(ctx context.Context) error) {
 	wp.inputCh <- task
 }
 
-func doTasksByWorkers(ctx context.Context,
+func (wp *WorkersPool) doTasksByWorkers(ctx context.Context,
 	workerIndex int,
 	taskCh chan func(ctx context.Context) error) error {
-	log.Printf("worker_%v started\n", workerIndex)
+	wp.l.Debug("worker_%v started", workerIndex)
 workerLoop:
 	for {
 		select {
 		case <-ctx.Done():
-			log.Printf("worker_%v got context.Done\n", workerIndex)
+			wp.l.Debug("worker_%v got context.Done", workerIndex)
 			break workerLoop
 		case workerTask := <-taskCh:
-			log.Printf("worker_%v is busy\n", workerIndex)
+			wp.l.Debug("worker_%v is busy", workerIndex)
 			if err := workerTask(ctx); err != nil {
-				log.Printf("worker_%v got error:%s", workerIndex, err.Error())
+				wp.l.Debug("worker_%v got error:%s", workerIndex, err.Error())
 				return err
 			} else {
-				log.Printf("worker %v finished task correctly", workerIndex)
+				wp.l.Debug("worker %v finished task correctly", workerIndex)
 			}
 		}
 	}
@@ -65,11 +67,11 @@ func (wp *WorkersPool) Run(ctx context.Context) {
 	for workerIndex := 0; workerIndex < wp.workersNumber; workerIndex++ {
 		workerIndex := workerIndex
 		g.Go(func() error {
-			return doTasksByWorkers(ctx, workerIndex, wp.inputCh)
+			return wp.doTasksByWorkers(ctx, workerIndex, wp.inputCh)
 		})
 	}
 	if err := g.Wait(); err != nil {
-		log.Println(err)
+		wp.l.Debug(err)
 	}
 	close(wp.inputCh)
 }
@@ -78,9 +80,9 @@ func (wp *WorkersPool) Close() {
 	close(wp.done)
 }
 
-func GetWorkersPool(wpConfig settings.WorkersConfig) IWorkerPool {
+func GetWorkersPool(l *logger.Logger, wpConfig config.Workers) IWorkerPool {
 	once.Do(func() {
-		wp = NewWorkersPool(wpConfig.WorkersNumber, wpConfig.PoolLength)
+		wp = NewWorkersPool(wpConfig.WorkersNumber, wpConfig.PoolLength, l)
 	})
 	return wp
 }

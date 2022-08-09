@@ -3,11 +3,11 @@ package memorystorage
 import (
 	"context"
 	"errors"
-	"log"
 
 	"github.com/dimk00z/go-shortener-praktikum/internal/models"
 	"github.com/dimk00z/go-shortener-praktikum/internal/shortenererrors"
 	"github.com/dimk00z/go-shortener-praktikum/internal/storages/storageerrors"
+	"github.com/dimk00z/go-shortener-praktikum/pkg/logger"
 )
 
 type webResourse struct {
@@ -24,25 +24,27 @@ type UserURL struct {
 type URLStorage struct {
 	ShortURLs map[string]webResourse
 	UsersData map[string][]UserURL
+	l         *logger.Logger
 }
 
-func NewStorage() *URLStorage {
+func NewStorage(l *logger.Logger) *URLStorage {
 	return &URLStorage{
 		ShortURLs: make(map[string]webResourse),
 		UsersData: make(map[string][]UserURL),
+		l:         l,
 	}
 }
 
 func (st *URLStorage) SaveURL(URL string, shortURL string, userID string) (err error) {
 	if _, ok := st.ShortURLs[shortURL]; ok {
-		log.Println(URL, " has been already saved")
+		st.l.Debug(URL, " has been already saved")
 		return storageerrors.ErrURLAlreadySave
 	}
 	st.ShortURLs[shortURL] = webResourse{
 		URL:       URL,
 		counter:   0,
 		isDeleted: false}
-	log.Println(shortURL, st.ShortURLs[shortURL])
+	st.l.Debug(shortURL, st.ShortURLs[shortURL])
 	if _, ok := st.UsersData[userID]; !ok {
 		st.UsersData[userID] = make([]UserURL, 0)
 	}
@@ -59,7 +61,7 @@ func (st *URLStorage) GetByShortURL(requiredURL string) (URL string, err error) 
 		webResourse.counter += 1
 		st.ShortURLs[requiredURL] = webResourse
 
-		log.Println(st.ShortURLs[requiredURL])
+		st.l.Debug(st.ShortURLs[requiredURL])
 		if webResourse.isDeleted {
 			err = shortenererrors.ErrURLDeleted
 		}
@@ -71,7 +73,7 @@ func (st *URLStorage) GetByShortURL(requiredURL string) (URL string, err error) 
 }
 
 func (st *URLStorage) Close() error {
-	log.Println("Memory storage closed")
+	st.l.Info("Memory storage closed")
 	return nil
 }
 
@@ -90,7 +92,7 @@ func (st *URLStorage) GetUserURLs(user string) (result models.UserURLs, err erro
 			URL: userURL.URL}
 	}
 
-	log.Println(user, result)
+	st.l.Debug(user, result)
 	return
 }
 
@@ -99,7 +101,10 @@ func (st *URLStorage) SaveBatch(
 	user string) (result models.BatchShortURLs, err error) {
 	result = make(models.BatchShortURLs, len(batch))
 	for index, row := range batch {
-		st.SaveURL(row.OriginalURL, row.ShortURL, user)
+		err := st.SaveURL(row.OriginalURL, row.ShortURL, user)
+		if err != nil {
+			st.l.Debug(err)
+		}
 		result[index].CorrelationID = row.CorrelationID
 		result[index].ShortURL = row.ShortURL
 	}

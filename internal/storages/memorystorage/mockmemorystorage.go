@@ -1,8 +1,11 @@
 package memorystorage
 
 import (
+	"log"
+
 	"github.com/dimk00z/go-shortener-praktikum/internal/storages/storageinterface"
 	"github.com/dimk00z/go-shortener-praktikum/internal/util"
+	"github.com/dimk00z/go-shortener-praktikum/pkg/logger"
 )
 
 var (
@@ -16,11 +19,14 @@ const (
 func GenMockStorage() storageinterface.Storage {
 
 	if mockStorage == nil {
-		mockStorage = NewStorage()
+		mockStorage = NewStorage(logger.New("debug"))
 		var mockURLs = []string{
 			"http://ya.ru/", "https://yandex.ru/", "https://mail.ru/"}
 		for _, url := range mockURLs {
-			mockStorage.SaveURL(url, util.ShortenLink(url), userUUID)
+			err := mockStorage.SaveURL(url, util.ShortenLink(url), userUUID)
+			if err != nil {
+				log.Println(err)
+			}
 		}
 	}
 

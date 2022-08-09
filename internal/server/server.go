@@ -2,7 +2,6 @@ package server
 
 import (
 	"context"
-	"log"
 	"net/http"
 	"os"
 	"os/signal"
@@ -12,94 +11,118 @@ import (
 	"github.com/dimk00z/go-shortener-praktikum/internal/middleware/cookie"
 	"github.com/dimk00z/go-shortener-praktikum/internal/middleware/decompressor"
 	"github.com/dimk00z/go-shortener-praktikum/internal/storages/storageinterface"
+	"github.com/dimk00z/go-shortener-praktikum/internal/util"
 	"github.com/dimk00z/go-shortener-praktikum/internal/worker"
+	"github.com/dimk00z/go-shortener-praktikum/pkg/logger"
 	"github.com/go-chi/chi"
 	"github.com/go-chi/chi/middleware"
+	// _ "github.com/swaggo/http-swagger/example/go-chi/docs"
 )
 
 type ShortenerServer struct {
-	port   string
-	Router *chi.Mux
-	wp     worker.IWorkerPool
+	port      string
+	Router    *chi.Mux
+	wp        worker.IWorkerPool
+	secretKey string
+	l         *logger.Logger
 }
 
-func NewServer(port string, wp worker.IWorkerPool) *ShortenerServer {
+func NewServer(l *logger.Logger, port string, wp worker.IWorkerPool, secretKey string) *ShortenerServer {
 	return &ShortenerServer{
-		port:   port,
-		Router: chi.NewRouter(),
-		wp:     wp,
+		port:      port,
+		Router:    chi.NewRouter(),
+		wp:        wp,
+		secretKey: secretKey,
+		l:         l,
+	}
+}
+func (s *ShortenerServer) mountMiddleware() {
+	// Mount all Middleware here
+	cookieHandler := cookie.CookieHandler{
+		SecretKey: s.secretKey, L: s.l,
+	}
+	decompressHandler := decompressor.DecompressHandler{}
+
+	middlewareHadlers := []func(http.Handler) http.Handler{
+		middleware.RequestID,
+		middleware.Logger,
+		middleware.Recoverer,
+		decompressHandler.Handle,
+		cookieHandler.Handle,
+		middleware.Compress(5),
+	}
+
+	for _, handler := range middlewareHadlers {
+		s.Router.Use(handler)
 	}
 }
 func (s *ShortenerServer) MountHandlers(host string, st storageinterface.Storage) {
-	// Mount all Middleware here
-	s.Router.Use(middleware.RequestID)
-	s.Router.Use(middleware.Logger)
-	s.Router.Use(middleware.Recoverer)
-	s.Router.Use(decompressor.DecompressHandler)
-	s.Router.Use(cookie.CookieHandler)
 
-	s.Router.Use(middleware.Compress(5))
+	s.mountMiddleware()
+	h := handlers.NewShortenerHandler()
+	handlerOptions := []handlers.ShortenerOptions{
+		handlers.SetHost(host),
+		handlers.SetStorage(st),
+		handlers.SetWorkerPool(s.wp),
+		handlers.SetLoger(s.l),
+	}
 
-	// Mount all handlers here
-	// Sprint 1
+	for _, opt := range handlerOptions {
+		opt(h)
+	}
+
 	s.Router.Route("/", func(r chi.Router) {
-		h := handlers.NewRootHandler(host,
-			st)
-
-		r.Post("/", h.HandlePOSTRequest)
-		r.Get("/{shortURL}", h.HandleGETRequest)
-	})
-	// Sprint 2
-	shortenerRouter := chi.NewRouter()
-	shortenerRouter.Route("/", func(r chi.Router) {
-		h := handlers.NewShortenerAPIHandler(host,
-			st)
-		r.Post("/", h.SaveJSON)
-		// Sprint 3 Increment 12
-		r.Post("/batch", h.SaveBatch)
+		r.Post("/", h.PostShortURL)
+		r.Get("/{shortURL}", h.GetByShortURL)
 	})
 
-	// Sprint 3
-	userRouter := chi.NewRouter()
-	userRouter.Route("/", func(r chi.Router) {
-		userHandler := handlers.NewUserHandler(
-			host,
-			st,
-			s.wp,
-		)
-		r.Get("/urls", userHandler.GetUserURLs)
-		r.Delete("/urls", userHandler.DeleteUserURLs)
-	})
-	dbRouter := chi.NewRouter()
-	dbRouter.Route("/", func(r chi.Router) {
-		dbHandler := handlers.NewDBHandler(host,
-			st)
-		r.Get("/", dbHandler.PingDB)
-	})
 	apiRouter := chi.NewRouter()
-	apiRouter.Mount("/shorten", shortenerRouter)
-	apiRouter.Mount("/user", userRouter)
+	apiRouter.Mount("/shorten", chi.NewRouter().Route("/", func(r chi.Router) {
+		r.Post("/", h.SaveJSON)
+		r.Post("/batch", h.SaveBatch)
+	}))
+
+	apiRouter.Mount("/user", chi.NewRouter().Route("/", func(r chi.Router) {
+		r.Get("/urls", h.GetUserURLs)
+		r.Delete("/urls", h.DeleteUserURLs)
+	}))
 
 	s.Router.Mount("/api", apiRouter)
-	s.Router.Mount("/ping", dbRouter)
+
+	s.Router.Mount("/ping",
+		chi.NewRouter().Route("/", func(r chi.Router) {
+			r.Get("/", h.PingDB)
+		}))
+	fileServer := http.FileServer(http.Dir("./docs/"))
+
+	s.Router.HandleFunc("/swagger", func(w http.ResponseWriter, r *http.Request) {
+		http.Redirect(w, r, "/swagger/", http.StatusMovedPermanently)
+	})
+	s.Router.Handle("/swagger/", http.StripPrefix("/swagger", util.ContentType(fileServer)))
+	s.Router.Handle("/swagger/*", http.StripPrefix("/swagger", util.ContentType(fileServer)))
 }
 
 func (s ShortenerServer) RunServer(ctx context.Context, cancel context.CancelFunc, storage storageinterface.Storage) {
 	interrupt := make(chan os.Signal, 1)
+	defer s.wp.Close()
 	signal.Notify(interrupt, os.Interrupt, syscall.SIGTERM)
 	go func() {
-		log.Println("Server started at " + s.port)
+		s.l.Debug("Server started at " + s.port)
 		err := http.ListenAndServe(s.port, s.Router)
 		if err != nil {
-			log.Println(err)
+			s.l.Debug(err)
 		}
 		cancel()
 	}()
 	select {
 	case killSignal := <-interrupt:
-		log.Print("Got ", killSignal)
+		s.l.Debug("Got ", killSignal)
 		cancel()
 	case <-ctx.Done():
 	}
-	log.Print("Server closed")
+
+}
+
+func (s ShortenerServer) ShutDown() {
+	s.l.Debug("Server closed")
 }
