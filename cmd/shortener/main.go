@@ -3,6 +3,13 @@ package main
 import (
 	"github.com/dimk00z/go-shortener-praktikum/config"
 	"github.com/dimk00z/go-shortener-praktikum/internal/app"
+	"github.com/dimk00z/go-shortener-praktikum/internal/util"
+)
+
+var (
+	buildVersion string
+	buildDate    string
+	buildCommit  string
 )
 
 // @title Shortener
@@ -14,6 +21,8 @@ import (
 // @host localhost:8080
 // @BasePath /
 func main() {
+	// Print build info
+	util.PrintBulidInfo(buildVersion, buildDate, buildCommit)
 	// Configuration
 	cfg := config.LoadConfig()
 	// Run
