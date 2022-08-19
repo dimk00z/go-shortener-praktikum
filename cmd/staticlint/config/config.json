@@ -1,0 +1,4 @@
+{
+  "staticCheck": ["SA4006", "SA5000", "SA6000", "SA9004"],
+  "styleCheck": ["ST1000", "ST1005"]
+}
