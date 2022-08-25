@@ -18,6 +18,11 @@ storage:
 
 security:
   secret_key: 'SECRET_KEY'
+  enable_https: false
+  key_file: 'cert/server.key'
+  cert_file: 'cert/server.crt'
+  # cert_file: '/home/dimk/learning/praktikum/go-shortener-praktikum/cert/server.crt'
+  # key_file: '/home/dimk/learning/praktikum/go-shortener-praktikum/cert/server.key'
 
 workers:
   workers_number: 5

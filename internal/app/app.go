@@ -20,7 +20,14 @@ func StartApp(config *config.Config) {
 	host := config.Server.Host
 
 	wp := worker.GetWorkersPool(l, config.Workers)
-	server := server.NewServer(l, config.Server.Port, wp, config.Security.SecretKey)
+	s := server.NewServer(l, config.Server.Port, wp, config.Security.SecretKey)
+	if config.Security.EnableHTTPS {
+		server.SetTLSConfig(
+			config.Security.CertFile,
+			config.Security.KeyFile,
+			config.Server.Port,
+		)(s)
+	}
 
 	if config.Storage.DataSourceName != "" {
 		doMigrations(l, config.Storage.DataSourceName)
@@ -28,14 +35,14 @@ func StartApp(config *config.Config) {
 
 	storage := storagedi.GetStorage(l, config.Storage)
 
-	server.MountHandlers(host, storage)
-	defer shutDown(wp, storage, server)
+	s.MountHandlers(host, storage)
+	defer shutDown(wp, storage, s)
 	ctx, cancel := context.WithCancel(context.Background())
 
 	go func() {
 		wp.Run(ctx)
 	}()
-	server.RunServer(ctx, cancel, storage)
+	s.RunServer(ctx, cancel, storage)
 }
 
 func shutDown(wp worker.IWorkerPool, st storageinterface.Storage, s *server.ShortenerServer) {

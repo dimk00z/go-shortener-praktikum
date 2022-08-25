@@ -39,11 +39,14 @@ type (
 		FilePath       string `yaml:"file_storage_path" env:"FILE_STORAGE_PATH"`
 		PoolMax        int    `yaml:"pool_max" env:"PG_POOL_MAX"`
 		DataSourceName string `yaml:"dsn" env:"DATABASE_DSN"`
-		MaxRetries     int    `env:"MAX_RETRIES" yaml:"max_retries"`
+		MaxRetries     int    `yaml:"max_retries" env:"MAX_RETRIES"`
 	}
 
 	Security struct {
-		SecretKey string `env-required:"true" env:"SECRET_KEY" yaml:"secret_key"`
+		SecretKey   string `env-required:"true" env:"SECRET_KEY" yaml:"secret_key"`
+		EnableHTTPS bool   `env:"ENABLE_HTTPS" yaml:"enable_https"`
+		CertFile    string `env:"CERT_FILE" yaml:"cert_file"`
+		KeyFile     string `env:"KEY_FILE" yaml:"key_file"`
 	}
 
 	Workers struct {
@@ -57,6 +60,9 @@ func (c *Config) checkFlags() {
 	flagHost := flag.String("b", "", "BASE_URL")
 	flagFileStorage := flag.String("f", "", "FILE_STORAGE_PATH")
 	flagDBStorage := flag.String("d", "", "DATABASE_DSN")
+
+	flagHTTPS := flag.Bool("s", false, "DATABASE_DSN")
+
 	flag.Parse()
 	if *flagPort != "" {
 		c.Server.Port = *flagPort
@@ -69,6 +75,9 @@ func (c *Config) checkFlags() {
 	}
 	if *flagFileStorage != "" {
 		c.Storage.FilePath = *flagFileStorage
+	}
+	if *flagHTTPS {
+		c.Security.EnableHTTPS = *flagHTTPS
 	}
 }
 

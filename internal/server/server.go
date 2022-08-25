@@ -19,12 +19,18 @@ import (
 	// _ "github.com/swaggo/http-swagger/example/go-chi/docs"
 )
 
+type serverTLSConfig struct {
+	port     string
+	certFile string
+	keyFile  string
+}
 type ShortenerServer struct {
 	port      string
 	Router    *chi.Mux
 	wp        worker.IWorkerPool
 	secretKey string
 	l         *logger.Logger
+	tlsConfig *serverTLSConfig
 }
 
 func NewServer(l *logger.Logger, port string, wp worker.IWorkerPool, secretKey string) *ShortenerServer {
@@ -107,8 +113,22 @@ func (s ShortenerServer) RunServer(ctx context.Context, cancel context.CancelFun
 	defer s.wp.Close()
 	signal.Notify(interrupt, os.Interrupt, syscall.SIGTERM)
 	go func() {
-		s.l.Debug("Server started at " + s.port)
-		err := http.ListenAndServe(s.port, s.Router)
+		var err error
+		if s.tlsConfig == nil {
+			s.l.Debug("Server started at " + s.port)
+			err = http.ListenAndServe(s.port, s.Router)
+		} else {
+			s.l.Debug("Server with TLS started at " + s.tlsConfig.port)
+			if s.tlsConfig.port != ":443" {
+				s.l.Warn("Default port for https is 443")
+			}
+			err = http.ListenAndServeTLS(
+				s.tlsConfig.port,
+				s.tlsConfig.certFile,
+				s.tlsConfig.keyFile,
+				s.Router)
+		}
+
 		if err != nil {
 			s.l.Debug(err)
 		}
