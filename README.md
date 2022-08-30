@@ -34,3 +34,14 @@ docker-compose up
 Пример запуска с файловым хранилищем `go run main.go -f "storage.json"`
 
 `http://localhost:8080/swagger/` - описание API
+
+### Использование HTTPS
+
+Для запуска сервера с использованием tls необходимы ключ и сертификат шифрования.
+Пример для генерации самоподписанных ключевых данных:
+```bash
+openssl genrsa -out cert/server.key 2048
+openssl req -new -x509 -sha256 -key cert/server.key -out cert/server.crt -days 3650
+```
+
+флаг `-s` или `env:ENABLE_HTTPS` - для запуска сервера с шифрованием

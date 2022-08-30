@@ -39,11 +39,14 @@ type (
 		FilePath       string `yaml:"file_storage_path" env:"FILE_STORAGE_PATH"`
 		PoolMax        int    `yaml:"pool_max" env:"PG_POOL_MAX"`
 		DataSourceName string `yaml:"dsn" env:"DATABASE_DSN"`
-		MaxRetries     int    `env:"MAX_RETRIES" yaml:"max_retries"`
+		MaxRetries     int    `yaml:"max_retries" env:"MAX_RETRIES"`
 	}
 
 	Security struct {
-		SecretKey string `env-required:"true" env:"SECRET_KEY" yaml:"secret_key"`
+		SecretKey   string `env-required:"true" env:"SECRET_KEY" yaml:"secret_key"`
+		EnableHTTPS bool   `env:"ENABLE_HTTPS" yaml:"enable_https"`
+		CertFile    string `env:"CERT_FILE" yaml:"cert_file"`
+		KeyFile     string `env:"KEY_FILE" yaml:"key_file"`
 	}
 
 	Workers struct {
@@ -52,23 +55,51 @@ type (
 	}
 )
 
-func (c *Config) checkFlags() {
-	flagPort := flag.String("a", "", "SERVER_ADDRESS")
-	flagHost := flag.String("b", "", "BASE_URL")
-	flagFileStorage := flag.String("f", "", "FILE_STORAGE_PATH")
-	flagDBStorage := flag.String("d", "", "DATABASE_DSN")
+const defaultConfigPath = "./config/config.yml"
+
+type configFlags struct {
+	flagPort        *string
+	flagHost        *string
+	flagFileStorage *string
+	flagDBStorage   *string
+	flagHTTPS       *bool
+	flagConfigFile  *string
+}
+
+func newConfigFlags() *configFlags {
+	return &configFlags{}
+}
+
+func (config *configFlags) parseFlags() {
+	config.flagPort = flag.String("a", "", "SERVER_ADDRESS")
+	config.flagHost = flag.String("b", "", "BASE_URL")
+	config.flagFileStorage = flag.String("f", "", "FILE_STORAGE_PATH")
+	config.flagDBStorage = flag.String("d", "", "DATABASE_DSN")
+	config.flagHTTPS = flag.Bool("s", false, "ENABLE_HTTPS")
+	config.flagConfigFile = flag.String("c", defaultConfigPath, "CONFIG")
+	configLongFlag := flag.String("config", defaultConfigPath, "CONFIG")
 	flag.Parse()
-	if *flagPort != "" {
-		c.Server.Port = *flagPort
+	if *configLongFlag != defaultConfigPath {
+		config.flagConfigFile = configLongFlag
 	}
-	if *flagHost != "" {
-		c.Server.Host = *flagHost
+}
+
+func (c *Config) checkFlags(config *configFlags) {
+
+	if *config.flagPort != "" {
+		c.Server.Port = *config.flagPort
 	}
-	if *flagDBStorage != "" {
-		c.Storage.DataSourceName = *flagDBStorage
+	if *config.flagHost != "" {
+		c.Server.Host = *config.flagHost
 	}
-	if *flagFileStorage != "" {
-		c.Storage.FilePath = *flagFileStorage
+	if *config.flagDBStorage != "" {
+		c.Storage.DataSourceName = *config.flagDBStorage
+	}
+	if *config.flagFileStorage != "" {
+		c.Storage.FilePath = *config.flagFileStorage
+	}
+	if *config.flagHTTPS {
+		c.Security.EnableHTTPS = *config.flagHTTPS
 	}
 }
 
@@ -76,9 +107,12 @@ func (c *Config) checkFlags() {
 func LoadConfig() *Config {
 	var err error
 
-	Cfg := &Config{}
+	parsedFlags := newConfigFlags()
+	parsedFlags.parseFlags()
 
-	err = cleanenv.ReadConfig("./config/config.yml", Cfg)
+	Cfg := &Config{}
+	configPath := parsedFlags.flagConfigFile
+	err = cleanenv.ReadConfig(*configPath, Cfg)
 	if err != nil {
 		log.Fatalf("config error: %v", err)
 		return nil
@@ -89,7 +123,7 @@ func LoadConfig() *Config {
 		log.Fatalf("config error: %v", err)
 		return nil
 	}
-	Cfg.checkFlags()
+	Cfg.checkFlags(parsedFlags)
 
 	return Cfg
 }

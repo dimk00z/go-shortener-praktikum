@@ -19,12 +19,18 @@ import (
 	// _ "github.com/swaggo/http-swagger/example/go-chi/docs"
 )
 
+type serverTLSConfig struct {
+	port     string
+	certFile string
+	keyFile  string
+}
 type ShortenerServer struct {
 	port      string
 	Router    *chi.Mux
 	wp        worker.IWorkerPool
 	secretKey string
 	l         *logger.Logger
+	tlsConfig *serverTLSConfig
 }
 
 func NewServer(l *logger.Logger, port string, wp worker.IWorkerPool, secretKey string) *ShortenerServer {
@@ -102,13 +108,39 @@ func (s *ShortenerServer) MountHandlers(host string, st storageinterface.Storage
 	s.Router.Handle("/swagger/*", http.StripPrefix("/swagger", util.ContentType(fileServer)))
 }
 
-func (s ShortenerServer) RunServer(ctx context.Context, cancel context.CancelFunc, storage storageinterface.Storage) {
+func (s *ShortenerServer) listenAndServe() (err error) {
+	// HTTP case
+	if s.tlsConfig == nil {
+		s.l.Debug("Server started at " + s.port)
+		err = http.ListenAndServe(s.port, s.Router)
+		return err
+	}
+
+	// HTTPS case
+	s.l.Debug("Server with TLS started at " + s.tlsConfig.port)
+	if s.tlsConfig.port != ":443" {
+		s.l.Warn("Default port for https is 443")
+	}
+	err = http.ListenAndServeTLS(
+		s.tlsConfig.port,
+		s.tlsConfig.certFile,
+		s.tlsConfig.keyFile,
+		s.Router)
+	return err
+}
+
+func (s *ShortenerServer) RunServer(ctx context.Context, cancel context.CancelFunc, storage storageinterface.Storage) {
 	interrupt := make(chan os.Signal, 1)
 	defer s.wp.Close()
-	signal.Notify(interrupt, os.Interrupt, syscall.SIGTERM)
+	shutdownSignals := []os.Signal{
+		os.Interrupt,
+		syscall.SIGTERM,
+		syscall.SIGINT,
+		syscall.SIGQUIT,
+	}
+	signal.Notify(interrupt, shutdownSignals...)
 	go func() {
-		s.l.Debug("Server started at " + s.port)
-		err := http.ListenAndServe(s.port, s.Router)
+		err := s.listenAndServe()
 		if err != nil {
 			s.l.Debug(err)
 		}

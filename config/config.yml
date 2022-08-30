@@ -18,6 +18,9 @@ storage:
 
 security:
   secret_key: 'SECRET_KEY'
+  enable_https: false
+  key_file: 'cert/server.key'
+  cert_file: 'cert/server.crt'
 
 workers:
   workers_number: 5
