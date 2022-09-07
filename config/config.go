@@ -43,10 +43,11 @@ type (
 	}
 
 	Security struct {
-		SecretKey   string `env-required:"true" env:"SECRET_KEY" yaml:"secret_key"`
-		EnableHTTPS bool   `env:"ENABLE_HTTPS" yaml:"enable_https"`
-		CertFile    string `env:"CERT_FILE" yaml:"cert_file"`
-		KeyFile     string `env:"KEY_FILE" yaml:"key_file"`
+		SecretKey     string `env-required:"true" env:"SECRET_KEY" yaml:"secret_key"`
+		EnableHTTPS   bool   `env:"ENABLE_HTTPS" yaml:"enable_https"`
+		CertFile      string `env:"CERT_FILE" yaml:"cert_file"`
+		KeyFile       string `env:"KEY_FILE" yaml:"key_file"`
+		TrustedSubnet string `env:"TRUSTED_SUBNET" yaml:"trusted_subnet"`
 	}
 
 	Workers struct {
@@ -58,12 +59,13 @@ type (
 const defaultConfigPath = "./config/config.yml"
 
 type configFlags struct {
-	flagPort        *string
-	flagHost        *string
-	flagFileStorage *string
-	flagDBStorage   *string
-	flagHTTPS       *bool
-	flagConfigFile  *string
+	flagPort          *string
+	flagHost          *string
+	flagFileStorage   *string
+	flagDBStorage     *string
+	flagHTTPS         *bool
+	flagConfigFile    *string
+	flagTrustedSubnet *string
 }
 
 func newConfigFlags() *configFlags {
@@ -78,6 +80,8 @@ func (config *configFlags) parseFlags() {
 	config.flagHTTPS = flag.Bool("s", false, "ENABLE_HTTPS")
 	config.flagConfigFile = flag.String("c", defaultConfigPath, "CONFIG")
 	configLongFlag := flag.String("config", defaultConfigPath, "CONFIG")
+	config.flagTrustedSubnet = flag.String("t", "", "TRUSTED_SUBNET")
+
 	flag.Parse()
 	if *configLongFlag != defaultConfigPath {
 		config.flagConfigFile = configLongFlag
@@ -100,6 +104,9 @@ func (c *Config) checkFlags(config *configFlags) {
 	}
 	if *config.flagHTTPS {
 		c.Security.EnableHTTPS = *config.flagHTTPS
+	}
+	if *config.flagTrustedSubnet != "" {
+		c.Security.TrustedSubnet = *config.flagTrustedSubnet
 	}
 }
 

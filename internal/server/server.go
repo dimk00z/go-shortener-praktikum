@@ -25,12 +25,13 @@ type serverTLSConfig struct {
 	keyFile  string
 }
 type ShortenerServer struct {
-	port      string
-	Router    *chi.Mux
-	wp        worker.IWorkerPool
-	secretKey string
-	l         *logger.Logger
-	tlsConfig *serverTLSConfig
+	port          string
+	Router        *chi.Mux
+	wp            worker.IWorkerPool
+	secretKey     string
+	l             *logger.Logger
+	tlsConfig     *serverTLSConfig
+	trustedSubnet string
 }
 
 func NewServer(l *logger.Logger, port string, wp worker.IWorkerPool, secretKey string) *ShortenerServer {
@@ -71,6 +72,7 @@ func (s *ShortenerServer) MountHandlers(host string, st storageinterface.Storage
 		handlers.SetStorage(st),
 		handlers.SetWorkerPool(s.wp),
 		handlers.SetLoger(s.l),
+		handlers.SetTrustedSubnet(s.trustedSubnet),
 	}
 
 	for _, opt := range handlerOptions {

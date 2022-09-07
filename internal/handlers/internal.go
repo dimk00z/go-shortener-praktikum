@@ -6,6 +6,8 @@ import (
 	"github.com/dimk00z/go-shortener-praktikum/internal/util"
 )
 
+const securityErrorMessage = "Host is not allowed to connect to endpoint"
+
 // GetStats godoc
 // Get db statistics
 // @Summary Get db statistics
@@ -17,8 +19,10 @@ import (
 // @router /api/internal/stats [get]
 func (h *ShortenerHandler) GetStats(w http.ResponseWriter, r *http.Request) {
 	// TODO: check network logic
-	h.l.Debug("%T\n", h.Storage)
-
+	if h.trustedSubnet != "" {
+		util.JSONError(w, securityErrorMessage, http.StatusForbidden)
+		return
+	}
 	status := http.StatusOK
 	stat, err := h.Storage.GetStat()
 	if err != nil {

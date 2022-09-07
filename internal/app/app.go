@@ -28,6 +28,7 @@ func StartApp(config *config.Config) {
 			config.Server.Port,
 		)(s)
 	}
+	server.SetTrustedSubnet(config.Security.TrustedSubnet)(s)
 
 	if config.Storage.DataSourceName != "" {
 		doMigrations(l, config.Storage.DataSourceName)

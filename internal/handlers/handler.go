@@ -7,10 +7,11 @@ import (
 )
 
 type ShortenerHandler struct {
-	Storage storageinterface.Storage
-	host    string
-	wp      worker.IWorkerPool
-	l       *logger.Logger
+	Storage       storageinterface.Storage
+	host          string
+	wp            worker.IWorkerPool
+	l             *logger.Logger
+	trustedSubnet string
 }
 
 func NewShortenerHandler() *ShortenerHandler {
@@ -25,12 +26,16 @@ func SetStorage(st storageinterface.Storage) ShortenerOptions {
 	}
 }
 
+func SetTrustedSubnet(trustedSubnet string) ShortenerOptions {
+	return func(s *ShortenerHandler) {
+		s.trustedSubnet = trustedSubnet
+	}
+}
 func SetHost(host string) ShortenerOptions {
 	return func(s *ShortenerHandler) {
 		s.host = host
 	}
 }
-
 func SetWorkerPool(wp worker.IWorkerPool) ShortenerOptions {
 	return func(s *ShortenerHandler) {
 		s.wp = wp
