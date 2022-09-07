@@ -242,3 +242,8 @@ func checkValueExists(db *sql.DB, table string, field string, value string) bool
 	}
 	return false
 }
+
+func (st *DataBaseStorage) GetStat() (stat models.Stat, err error) {
+	// TODO: add logic
+	return
+}

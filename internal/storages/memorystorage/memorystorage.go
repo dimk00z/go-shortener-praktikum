@@ -120,3 +120,8 @@ func (st *URLStorage) DeleteBatch(ctx context.Context,
 	}
 	return
 }
+func (st *URLStorage) GetStat() (stat models.Stat, err error) {
+	stat.URLs = len(st.ShortURLs)
+	stat.Users = len(st.UsersData)
+	return
+}

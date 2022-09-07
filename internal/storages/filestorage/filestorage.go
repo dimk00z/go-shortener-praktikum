@@ -179,3 +179,9 @@ func (st *FileStorage) DeleteBatch(ctx context.Context, batch models.BatchForDel
 	}
 	return
 }
+
+func (st *FileStorage) GetStat() (stat models.Stat, err error) {
+	stat.URLs = len(st.ShortURLs)
+	stat.Users = len(st.UsersData)
+	return
+}

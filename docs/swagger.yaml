@@ -5,6 +5,13 @@ definitions:
       result:
         type: string
     type: object
+  models.Stat:
+    properties:
+      urls:
+        type: integer
+      users:
+        type: integer
+    type: object
   models.URLRequest:
     properties:
       url:
@@ -70,6 +77,22 @@ paths:
       summary: Get by shortURL
       tags:
       - API
+  /api/internal/stats:
+    get:
+      consumes:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.Stat'
+        "403":
+          description: Forbidden
+        "500":
+          description: Internal Server Error
+      summary: Get db statistics
+      tags:
+      - Internal
   /api/shortener:
     post:
       consumes:

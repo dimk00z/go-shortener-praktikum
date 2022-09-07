@@ -93,6 +93,10 @@ func (s *ShortenerServer) MountHandlers(host string, st storageinterface.Storage
 		r.Delete("/urls", h.DeleteUserURLs)
 	}))
 
+	apiRouter.Mount("/internal", chi.NewRouter().Route("/", func(r chi.Router) {
+		r.Get("/stats", h.GetStats)
+	}))
+
 	s.Router.Mount("/api", apiRouter)
 
 	s.Router.Mount("/ping",
