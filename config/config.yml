@@ -6,6 +6,9 @@ http:
   server_address: ':8080'
   base_url: 'http://localhost:8080'
 
+grpc:
+  port: ":3200"
+
 logger:
   log_level: 'debug'
   rollbar_env: 'go-shortener-praktikum'

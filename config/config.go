@@ -13,6 +13,7 @@ type (
 	Config struct {
 		App      `yaml:"app"`
 		Server   `yaml:"http"`
+		GRPC     `yaml:"grpc"`
 		Log      `yaml:"logger"`
 		Storage  `yaml:"storage"`
 		Security `yaml:"security"`
@@ -30,7 +31,9 @@ type (
 		Port string `env-required:"true" yaml:"server_address" env:"SERVER_ADDRESS"`
 		Host string `env-required:"true" yaml:"base_url" env:"BASE_URL"`
 	}
-
+	GRPC struct {
+		Port string `yaml:"port" env:"GRPC_PORT"`
+	}
 	// Log -.
 	Log struct {
 		Level string `env-required:"true" yaml:"log_level" env:"LOG_LEVEL"`
@@ -67,6 +70,7 @@ type configFlags struct {
 	flagHTTPS         *bool
 	flagConfigFile    *string
 	flagTrustedSubnet *string
+	flagGRPCPort      *string
 }
 
 func newConfigFlags() *configFlags {
@@ -82,6 +86,7 @@ func (config *configFlags) parseFlags() {
 	config.flagConfigFile = flag.String("c", defaultConfigPath, "CONFIG")
 	configLongFlag := flag.String("config", defaultConfigPath, "CONFIG")
 	config.flagTrustedSubnet = flag.String("t", "", "TRUSTED_SUBNET")
+	config.flagGRPCPort = flag.String("g", "", "GRPC_PORT")
 
 	flag.Parse()
 	if *configLongFlag != defaultConfigPath {
@@ -108,6 +113,9 @@ func (c *Config) checkFlags(config *configFlags) {
 	}
 	if *config.flagTrustedSubnet != "" {
 		c.Security.TrustedSubnet = *config.flagTrustedSubnet
+	}
+	if *config.flagGRPCPort != "" {
+		c.GRPC.Port = *config.flagGRPCPort
 	}
 }
 func checkCIDR(s string) error {
