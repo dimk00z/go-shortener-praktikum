@@ -3,6 +3,7 @@ package config
 import (
 	"flag"
 	"log"
+	"net"
 
 	"github.com/ilyakaznacheev/cleanenv"
 )
@@ -109,6 +110,13 @@ func (c *Config) checkFlags(config *configFlags) {
 		c.Security.TrustedSubnet = *config.flagTrustedSubnet
 	}
 }
+func checkCIDR(s string) error {
+	_, _, err := net.ParseCIDR(s)
+	if err != nil {
+		log.Printf("CIDR parsing error: %v", err)
+	}
+	return err
+}
 
 // NewConfig returns app config.
 func LoadConfig() *Config {
@@ -132,5 +140,8 @@ func LoadConfig() *Config {
 	}
 	Cfg.checkFlags(parsedFlags)
 
+	if checkCIDR(Cfg.Security.TrustedSubnet) != nil {
+		Cfg.Security.TrustedSubnet = ""
+	}
 	return Cfg
 }

@@ -16,6 +16,7 @@ require (
 	github.com/satori/go.uuid v1.2.0
 	github.com/stretchr/testify v1.8.0
 	github.com/swaggo/swag v1.8.5
+	golang.org/x/exp v0.0.0-20220907003533-145caa8ea1d0
 	golang.org/x/sync v0.0.0-20220722155255-886fb9371eb4
 )
 

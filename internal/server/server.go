@@ -96,7 +96,9 @@ func (s *ShortenerServer) MountHandlers(host string, st storageinterface.Storage
 	}))
 
 	apiRouter.Mount("/internal", chi.NewRouter().Route("/", func(r chi.Router) {
-		r.Get("/stats", h.GetStats)
+		// r.Get("/stats", h.ProtectedByTrustedNetwork(h.GetStats))
+		allowedMethods := []string{http.MethodGet}
+		r.Handle("/stats", h.ProtectedByTrustedNetwork(allowedMethods, http.HandlerFunc(h.GetStats)))
 	}))
 
 	s.Router.Mount("/api", apiRouter)

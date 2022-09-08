@@ -1,41 +1,29 @@
-package handlers
+package handlers_test
 
 import (
+	"io"
 	"net/http"
 	"testing"
 
-	"github.com/dimk00z/go-shortener-praktikum/internal/storages/storageinterface"
-	"github.com/dimk00z/go-shortener-praktikum/internal/worker"
-	"github.com/dimk00z/go-shortener-praktikum/pkg/logger"
+	"github.com/dimk00z/go-shortener-praktikum/internal/storages/memorystorage"
+	"github.com/stretchr/testify/assert"
 )
 
 func TestShortenerHandler_GetStats(t *testing.T) {
-	type fields struct {
-		Storage storageinterface.Storage
-		host    string
-		wp      worker.IWorkerPool
-		l       *logger.Logger
+	mockStorage := memorystorage.GenMockStorage()
+	defer mockStorage.Close()
+	wp := getMockWorkersPool()
+	s := createMockServer(mockStorage, wp)
+	endpointURL := "/api/internal/stats"
+	req, _ := http.NewRequest("GET", endpointURL, nil)
+	response := execRequest(req, s).Result()
+	defer response.Body.Close()
+	resBody, err := io.ReadAll(response.Body)
+	if err != nil {
+		t.Fatal(err)
 	}
-	type args struct {
-		w http.ResponseWriter
-		r *http.Request
-	}
-	tests := []struct {
-		name   string
-		fields fields
-		args   args
-	}{
-		// TODO: Add test cases.
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			h := &ShortenerHandler{
-				Storage: tt.fields.Storage,
-				host:    tt.fields.host,
-				wp:      tt.fields.wp,
-				l:       tt.fields.l,
-			}
-			h.GetStats(tt.args.w, tt.args.r)
-		})
-	}
+	assert.Equal(t, http.StatusForbidden, response.StatusCode, "wrong answer code")
+	assert.Equal(t, "{\"api_error\":\"Trusted network should be given\"}\n", string(resBody))
+	assert.Equal(t, "application/json; charset=utf-8",
+		response.Header.Get("Content-Type"))
 }

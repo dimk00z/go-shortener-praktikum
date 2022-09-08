@@ -1,23 +1,24 @@
 package handlers
 
 import (
+	"errors"
 	"net"
 	"net/http"
 	"strings"
 
 	"github.com/dimk00z/go-shortener-praktikum/internal/util"
+	"golang.org/x/exp/slices"
 )
 
-const securityErrorMessage = "Host is not allowed to connect to endpoint"
-
 func realIP(r *http.Request) string {
+	// logic from https://github.com/go-chi/chi/blob/master/middleware/realip.go
 	var ip string
 
-	if tcip := r.Header.Get(http.CanonicalHeaderKey("True-Client-IP")); tcip != "" {
+	if tcip := r.Header.Get("True-Client-IP"); tcip != "" {
 		ip = tcip
-	} else if xrip := r.Header.Get(http.CanonicalHeaderKey("X-Real-IP")); xrip != "" {
+	} else if xrip := r.Header.Get("X-Real-IP"); xrip != "" {
 		ip = xrip
-	} else if xff := r.Header.Get(http.CanonicalHeaderKey("X-Forwarded-For")); xff != "" {
+	} else if xff := r.Header.Get("X-Forwarded-For"); xff != "" {
 		i := strings.Index(xff, ",")
 		if i == -1 {
 			i = len(xff)
@@ -38,6 +39,39 @@ func getRealIP(w http.ResponseWriter, r *http.Request) string {
 	return ""
 
 }
+func (h *ShortenerHandler) ProtectedByTrustedNetwork(allowedMethods []string, next http.Handler) http.Handler {
+	var securityRealIpNotGivenError = errors.New("RealIP was not given")
+	var securityRealIpError = errors.New("Host is not allowed to connect to endpoint")
+	var securityTrustedNetworkError = errors.New("Trusted network should be given")
+
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if !slices.Contains(allowedMethods, r.Method) {
+			util.JSONError(w, "Wrong method", http.StatusForbidden)
+			return
+		}
+		if h.trustedSubnet == "" {
+			util.JSONError(w, securityTrustedNetworkError.Error(), http.StatusForbidden)
+			return
+		}
+		ip := getRealIP(w, r)
+		h.l.Debug("Client ip is " + ip)
+		if ip == "" {
+			util.JSONError(w, securityRealIpNotGivenError.Error(), http.StatusForbidden)
+			return
+		}
+		_, ipnet, err := net.ParseCIDR(h.trustedSubnet)
+		if err != nil {
+			util.JSONError(w, err, http.StatusInternalServerError)
+		}
+
+		if !ipnet.Contains(net.ParseIP(ip)) {
+			util.JSONError(w, securityRealIpError.Error(), http.StatusForbidden)
+			return
+		}
+		next.ServeHTTP(w, r)
+	})
+
+}
 
 // GetStats godoc
 // Get db statistics
@@ -49,19 +83,6 @@ func getRealIP(w http.ResponseWriter, r *http.Request) string {
 // @Failure 500
 // @router /api/internal/stats [get]
 func (h *ShortenerHandler) GetStats(w http.ResponseWriter, r *http.Request) {
-	// TODO: check network logic
-
-	if h.trustedSubnet == "" {
-		util.JSONError(w, securityErrorMessage, http.StatusForbidden)
-		return
-	}
-	ip := getRealIP(w, r)
-	h.l.Debug("Client ip is " + ip)
-	if ip == "" {
-		util.JSONError(w, securityErrorMessage, http.StatusForbidden)
-		return
-	}
-
 	status := http.StatusOK
 	stat, err := h.Storage.GetStat()
 	if err != nil {
