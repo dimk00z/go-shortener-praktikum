@@ -40,9 +40,9 @@ func getRealIP(w http.ResponseWriter, r *http.Request) string {
 
 }
 func (h *ShortenerHandler) ProtectedByTrustedNetwork(allowedMethods []string, next http.Handler) http.Handler {
-	var securityRealIpNotGivenError = errors.New("RealIP was not given")
-	var securityRealIpError = errors.New("Host is not allowed to connect to endpoint")
-	var securityTrustedNetworkError = errors.New("Trusted network should be given")
+	var securityRealIPNotGivenError = errors.New("real ip was not given")
+	var securityRealIPError = errors.New("host is not allowed to connect to endpoint")
+	var securityTrustedNetworkError = errors.New("trusted network should be given")
 
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		if !slices.Contains(allowedMethods, r.Method) {
@@ -56,7 +56,7 @@ func (h *ShortenerHandler) ProtectedByTrustedNetwork(allowedMethods []string, ne
 		ip := getRealIP(w, r)
 		h.l.Debug("Client ip is " + ip)
 		if ip == "" {
-			util.JSONError(w, securityRealIpNotGivenError.Error(), http.StatusForbidden)
+			util.JSONError(w, securityRealIPNotGivenError.Error(), http.StatusForbidden)
 			return
 		}
 		_, ipnet, err := net.ParseCIDR(h.trustedSubnet)
@@ -65,7 +65,7 @@ func (h *ShortenerHandler) ProtectedByTrustedNetwork(allowedMethods []string, ne
 		}
 
 		if !ipnet.Contains(net.ParseIP(ip)) {
-			util.JSONError(w, securityRealIpError.Error(), http.StatusForbidden)
+			util.JSONError(w, securityRealIPError.Error(), http.StatusForbidden)
 			return
 		}
 		next.ServeHTTP(w, r)
