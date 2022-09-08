@@ -23,7 +23,7 @@ func TestShortenerHandler_GetStats(t *testing.T) {
 		t.Fatal(err)
 	}
 	assert.Equal(t, http.StatusForbidden, response.StatusCode, "wrong answer code")
-	assert.Equal(t, "{\"api_error\":\"Trusted network should be given\"}\n", string(resBody))
+	assert.Equal(t, "{\"api_error\":\"trusted network should be given\"}\n", string(resBody))
 	assert.Equal(t, "application/json; charset=utf-8",
 		response.Header.Get("Content-Type"))
 }
