@@ -10,9 +10,17 @@ message PingResponse {
   int32 code = 1;
   string message = 2;
 }
+
+message StatsRequest {}
+message StatsResponse {
+  int32 code = 1;
+  int32 urls = 2;
+  int32 users = 3;
+}
 service Shortener {
   // TODO: all logic here
   rpc Ping(PingRequest) returns (PingResponse);
+  rpc GetStats(StatsRequest) returns (StatsResponse);
   // rpc SaveUrl();
   // rpc SaveByJson();
   // rpc SaveBatch();

@@ -50,7 +50,7 @@ func StartApp(config *config.Config) {
 	}()
 
 	if config.GRPC.EnableGRPC {
-		setGRPC(storage, wp, l, config.Security.SecretKey, config.GRPC.Port)
+		setGRPC(storage, wp, l, config.Security.SecretKey, config.GRPC.Port, config.Security.TrustedSubnet)
 	}
 	s.RunServer(ctx, cancel, storage)
 }
@@ -59,13 +59,16 @@ func setGRPC(
 	st storageinterface.Storage,
 	wp worker.IWorkerPool,
 	l *logger.Logger,
-	secretKey string, grpcPort string) {
+	secretKey string,
+	grpcPort string,
+	trustedSubnet string) {
 	server := grpcServer.NewGRPCServer()
 	opts := []grpcServer.ServiceOptions{
 		grpcServer.SetLogger(l),
 		grpcServer.SetWorkerPool(wp),
 		grpcServer.SetStorage(st),
 		grpcServer.SetSecretKey(secretKey),
+		grpcServer.SetTrustedSubnet(trustedSubnet),
 	}
 	for _, opt := range opts {
 		opt(server.Service)
@@ -75,7 +78,7 @@ func setGRPC(
 	if err != nil {
 		l.Fatal(err)
 	}
-	s := grpc.NewServer()
+	s := grpc.NewServer(grpc.UnaryInterceptor(server.Service.Interceptor.AuthInterceptor))
 	reflection.Register(s)
 	pb.RegisterShortenerServer(s, server)
 	go func() {

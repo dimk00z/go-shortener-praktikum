@@ -14,8 +14,8 @@ type ContextType string
 const (
 	CookieUserIDField                = "user_id"
 	CookieMaxAge                     = 864000
-	uuidStringLength                 = 36
-	signSentencePosition             = 37
+	UIDStringLength                  = 36
+	SignSentencePosition             = 37
 	UserIDCtxName        ContextType = "ctxUserId"
 )
 
@@ -29,9 +29,9 @@ func (h *CookieHandler) Handle(next http.Handler) http.Handler {
 		cookieUserID := util.GetCookieParam(CookieUserIDField, r)
 		h.L.Debug(cookieUserID)
 		if cookieUserID != "" {
-			gotUUID := uuid.FromStringOrNil(cookieUserID[:uuidStringLength])
+			gotUUID := uuid.FromStringOrNil(cookieUserID[:UIDStringLength])
 			requiredSign := util.GetSign(gotUUID.Bytes(), h.SecretKey)
-			checkSign := cookieUserID[signSentencePosition:] == requiredSign
+			checkSign := cookieUserID[SignSentencePosition:] == requiredSign
 			h.L.Debug("Sign check status:", checkSign)
 			if checkSign {
 				next.ServeHTTP(w, r.WithContext(context.WithValue(r.Context(), UserIDCtxName, gotUUID.String())))
