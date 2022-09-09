@@ -3,7 +3,9 @@ syntax = "proto3";
 package shortener;
 
 option go_package = "/pb";
+
 message PingRequest {}
+
 message PingResponse {
   int32 code = 1;
   string message = 2;
@@ -11,11 +13,11 @@ message PingResponse {
 service Shortener {
   // TODO: all logic here
   rpc Ping(PingRequest) returns (PingResponse);
-  rpc SaveUrl();
-  rpc SaveByJson();
-  rpc SaveBatch();
-  rpc GetUsersURLs();
-  rpc DelUserURLs();
-  rpc GetOriginURL();
-  rpc GetStats();
+  // rpc SaveUrl();
+  // rpc SaveByJson();
+  // rpc SaveBatch();
+  // rpc GetUsersURLs();
+  // rpc DelUserURLs();
+  // rpc GetOriginURL();
+  // rpc GetStats();
 }

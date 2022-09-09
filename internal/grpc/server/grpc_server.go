@@ -1,11 +1,32 @@
 package server
 
+import (
+	"context"
+	"net/http"
+
+	pb "github.com/dimk00z/go-shortener-praktikum/internal/grpc/proto"
+)
+
 type GRPCServer struct {
-	port string
+	pb.UnimplementedShortenerServer
+	Service *Service
 }
 
-func NewGRPCServer(port string) *GRPCServer {
-	return &GRPCServer{
-		port: port,
+func NewGRPCServer() *GRPCServer {
+	return &GRPCServer{Service: &Service{}}
+}
+
+// Ping implement method for gRPC for check DB connection
+func (s *GRPCServer) Ping(ctx context.Context, request *pb.PingRequest) (*pb.PingResponse, error) {
+	var response pb.PingResponse
+	message := "connection established"
+	status := http.StatusOK
+	var err error
+	if err = s.Service.st.CheckConnection(ctx); err != nil {
+		message = err.Error()
+		status = http.StatusInternalServerError
 	}
+	response.Message = message
+	response.Code = int32(status)
+	return &response, err
 }
