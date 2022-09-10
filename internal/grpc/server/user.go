@@ -5,7 +5,10 @@ import (
 	"net/http"
 
 	pb "github.com/dimk00z/go-shortener-praktikum/internal/grpc/proto"
+	"github.com/dimk00z/go-shortener-praktikum/internal/models"
 )
+
+var ()
 
 func (s *GRPCServer) GetUsersURLs(ctx context.Context, request *pb.EmptyRequest) (*pb.UserURLsResponse, error) {
 	var response pb.UserURLsResponse
@@ -30,6 +33,17 @@ func (s *GRPCServer) GetUsersURLs(ctx context.Context, request *pb.EmptyRequest)
 func (s *GRPCServer) DelBatch(ctx context.Context, request *pb.DelBatchRequest) (*pb.DelBatchResponse, error) {
 	var response pb.DelBatchResponse
 	var err error
-	// TODO:add logic
+	if len(request.Urls) == 0 {
+		response.Code = http.StatusBadRequest
+		err = errEmptyBatchGiven
+		return &response, err
+	}
+	response.Code = http.StatusAccepted
+	userIDCtx := getUserIDFromMD(ctx)
+	var shortURLs models.BatchForDelete = request.Urls
+	deleteBatchTask := func(ctx context.Context) error {
+		return s.Service.st.DeleteBatch(ctx, shortURLs, userIDCtx)
+	}
+	s.Service.wp.Push(deleteBatchTask)
 	return &response, err
 }

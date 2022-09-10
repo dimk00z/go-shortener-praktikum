@@ -2,10 +2,8 @@ package app
 
 import (
 	"context"
-	"net"
 
 	"github.com/dimk00z/go-shortener-praktikum/config"
-	pb "github.com/dimk00z/go-shortener-praktikum/internal/grpc/proto"
 	grpcServer "github.com/dimk00z/go-shortener-praktikum/internal/grpc/server"
 	"github.com/dimk00z/go-shortener-praktikum/internal/server"
 	"github.com/dimk00z/go-shortener-praktikum/internal/storages/storagedi"
@@ -13,12 +11,12 @@ import (
 	"github.com/dimk00z/go-shortener-praktikum/internal/worker"
 	"github.com/dimk00z/go-shortener-praktikum/pkg/logger"
 	"google.golang.org/grpc"
-	"google.golang.org/grpc/reflection"
 )
 
 func StartApp(config *config.Config) {
 
 	l := logger.New(config.Log.Level)
+	ctx, cancel := context.WithCancel(context.Background())
 
 	l.Debug("%+v\n", config)
 
@@ -42,54 +40,29 @@ func StartApp(config *config.Config) {
 	storage := storagedi.GetStorage(l, config.Storage)
 
 	s.MountHandlers(host, storage)
-	defer shutDown(wp, storage, s)
-	ctx, cancel := context.WithCancel(context.Background())
+	var grpcShortenerServer *grpc.Server
+	if config.GRPC.EnableGRPC {
+		grpcShortenerServer = grpcServer.SetGRPC(storage, wp, l, config)
+	}
+	defer shutDown(l, wp, storage, s, grpcShortenerServer)
 
 	go func() {
 		wp.Run(ctx)
 	}()
 
-	if config.GRPC.EnableGRPC {
-		setGRPC(storage, wp, l, config)
-	}
 	s.RunServer(ctx, cancel, storage)
 }
 
-func setGRPC(
-	st storageinterface.Storage,
-	wp worker.IWorkerPool,
+func shutDown(
 	l *logger.Logger,
-	config *config.Config) {
-	server := grpcServer.NewGRPCServer()
-	opts := []grpcServer.ServiceOptions{
-		grpcServer.SetLogger(l),
-		grpcServer.SetWorkerPool(wp),
-		grpcServer.SetStorage(st),
-		grpcServer.SetSecretKey(config.Security.SecretKey),
-		grpcServer.SetTrustedSubnet(config.Security.TrustedSubnet),
-		grpcServer.SetShortenerHost(config.Server.Host),
-	}
-	for _, opt := range opts {
-		opt(server.Service)
-	}
-
-	listen, err := net.Listen("tcp", config.GRPC.Port)
-	if err != nil {
-		l.Fatal(err)
-	}
-	s := grpc.NewServer(grpc.UnaryInterceptor(server.Service.Interceptor.AuthInterceptor))
-	reflection.Register(s)
-	pb.RegisterShortenerServer(s, server)
-	go func() {
-		l.Info("setGRPC - gRPC server started on " + config.GRPC.Port)
-		if err := s.Serve(listen); err != nil {
-			l.Fatal(err)
-			// TODO: add graceful shutdown
-		}
-	}()
-}
-
-func shutDown(wp worker.IWorkerPool, st storageinterface.Storage, s *server.ShortenerServer) {
+	wp worker.IWorkerPool,
+	st storageinterface.Storage,
+	s *server.ShortenerServer,
+	grpcShortenerServer *grpc.Server) {
 	st.Close()
 	s.ShutDown()
+	if grpcShortenerServer != nil {
+		grpcShortenerServer.GracefulStop()
+	}
+	l.Debug("Services stopped grafefully")
 }
