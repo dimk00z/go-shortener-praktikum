@@ -8,12 +8,13 @@ import (
 )
 
 type Service struct {
+	Interceptor   *interceptors.Interceptor
 	st            storageinterface.Storage
 	wp            worker.IWorkerPool
 	l             *logger.Logger
 	secretKey     string
 	trustedSubnet string
-	Interceptor   *interceptors.Interceptor
+	host          string
 }
 
 type ServiceOptions func(*Service)
@@ -45,5 +46,11 @@ func SetSecretKey(secretKey string) ServiceOptions {
 func SetTrustedSubnet(trustedSubnet string) ServiceOptions {
 	return func(s *Service) {
 		s.trustedSubnet = trustedSubnet
+	}
+}
+
+func SetShortenerHost(host string) ServiceOptions {
+	return func(s *Service) {
+		s.host = host
 	}
 }

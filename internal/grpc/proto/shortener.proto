@@ -4,28 +4,75 @@ package shortener;
 
 option go_package = "/pb";
 
-message PingRequest {}
+message EmptyRequest {}
 
 message PingResponse {
   int32 code = 1;
   string message = 2;
 }
 
-message StatsRequest {}
 message StatsResponse {
   int32 code = 1;
   int32 urls = 2;
   int32 users = 3;
 }
+
+message URLRequest{
+  string url = 1;
+}
+message URLFromTextResponse{
+  int32 code = 1;
+  string short_url = 2; 
+}
+message ShortURLRequest{
+  string short_url = 1; 
+} 
+
+message URLResponse{
+  int32 code = 1;
+  string url = 2;
+}
+
+message BatchSaveRequest{
+  message URL {
+    string correlation_id = 1;
+    string original_url = 2;
+  }
+  repeated URL urls = 1;
+}
+
+message BatchSaveResponse{
+  message URL {
+    string correlation_id = 1;
+    string short_url = 2;
+  }
+  int32 code = 1;
+  repeated URL urls = 2;
+}
+message UserURLsResponse{
+  message URL {
+    string short_url = 1;
+    string original_url = 2;
+  }
+  int32 code = 1;
+  repeated URL urls = 2;
+}
+
+message DelBatchRequest{
+  int32 code = 1;
+  repeated string urls = 2;
+}
+
+message DelBatchResponse {
+  int32 code = 1;
+}
+
 service Shortener {
-  // TODO: all logic here
-  rpc Ping(PingRequest) returns (PingResponse);
-  rpc GetStats(StatsRequest) returns (StatsResponse);
-  // rpc SaveUrl();
-  // rpc SaveByJson();
-  // rpc SaveBatch();
-  // rpc GetUsersURLs();
-  // rpc DelUserURLs();
-  // rpc GetOriginURL();
-  // rpc GetStats();
+  rpc Ping(EmptyRequest) returns (PingResponse);
+  rpc GetStats(EmptyRequest) returns (StatsResponse);
+  rpc GetByShortURL(ShortURLRequest) returns (URLResponse);
+  rpc SaveURLFromText(URLRequest) returns (URLFromTextResponse);
+  rpc SaveBatch(BatchSaveRequest) returns (BatchSaveResponse);
+  rpc GetUsersURLs(EmptyRequest) returns (UserURLsResponse);
+  rpc DelBatch(DelBatchRequest) returns (DelBatchResponse);
 }

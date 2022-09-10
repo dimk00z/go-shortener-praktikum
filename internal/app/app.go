@@ -50,7 +50,7 @@ func StartApp(config *config.Config) {
 	}()
 
 	if config.GRPC.EnableGRPC {
-		setGRPC(storage, wp, l, config.Security.SecretKey, config.GRPC.Port, config.Security.TrustedSubnet)
+		setGRPC(storage, wp, l, config)
 	}
 	s.RunServer(ctx, cancel, storage)
 }
@@ -59,22 +59,21 @@ func setGRPC(
 	st storageinterface.Storage,
 	wp worker.IWorkerPool,
 	l *logger.Logger,
-	secretKey string,
-	grpcPort string,
-	trustedSubnet string) {
+	config *config.Config) {
 	server := grpcServer.NewGRPCServer()
 	opts := []grpcServer.ServiceOptions{
 		grpcServer.SetLogger(l),
 		grpcServer.SetWorkerPool(wp),
 		grpcServer.SetStorage(st),
-		grpcServer.SetSecretKey(secretKey),
-		grpcServer.SetTrustedSubnet(trustedSubnet),
+		grpcServer.SetSecretKey(config.Security.SecretKey),
+		grpcServer.SetTrustedSubnet(config.Security.TrustedSubnet),
+		grpcServer.SetShortenerHost(config.Server.Host),
 	}
 	for _, opt := range opts {
 		opt(server.Service)
 	}
 
-	listen, err := net.Listen("tcp", grpcPort)
+	listen, err := net.Listen("tcp", config.GRPC.Port)
 	if err != nil {
 		l.Fatal(err)
 	}
@@ -82,7 +81,7 @@ func setGRPC(
 	reflection.Register(s)
 	pb.RegisterShortenerServer(s, server)
 	go func() {
-		l.Info("setGRPC - gRPC server started on " + grpcPort)
+		l.Info("setGRPC - gRPC server started on " + config.GRPC.Port)
 		if err := s.Serve(listen); err != nil {
 			l.Fatal(err)
 			// TODO: add graceful shutdown
