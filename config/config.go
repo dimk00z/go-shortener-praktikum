@@ -1,8 +1,8 @@
 package config
 
 import (
-	"flag"
 	"log"
+	"net"
 
 	"github.com/ilyakaznacheev/cleanenv"
 )
@@ -12,6 +12,7 @@ type (
 	Config struct {
 		App      `yaml:"app"`
 		Server   `yaml:"http"`
+		GRPC     `yaml:"grpc"`
 		Log      `yaml:"logger"`
 		Storage  `yaml:"storage"`
 		Security `yaml:"security"`
@@ -29,7 +30,10 @@ type (
 		Port string `env-required:"true" yaml:"server_address" env:"SERVER_ADDRESS"`
 		Host string `env-required:"true" yaml:"base_url" env:"BASE_URL"`
 	}
-
+	GRPC struct {
+		Port       string `yaml:"port" env:"GRPC_PORT"`
+		EnableGRPC bool   `env:"ENABLE_GRPC" yaml:"enable_gprc"`
+	}
 	// Log -.
 	Log struct {
 		Level string `env-required:"true" yaml:"log_level" env:"LOG_LEVEL"`
@@ -43,10 +47,11 @@ type (
 	}
 
 	Security struct {
-		SecretKey   string `env-required:"true" env:"SECRET_KEY" yaml:"secret_key"`
-		EnableHTTPS bool   `env:"ENABLE_HTTPS" yaml:"enable_https"`
-		CertFile    string `env:"CERT_FILE" yaml:"cert_file"`
-		KeyFile     string `env:"KEY_FILE" yaml:"key_file"`
+		SecretKey     string `env-required:"true" env:"SECRET_KEY" yaml:"secret_key"`
+		EnableHTTPS   bool   `env:"ENABLE_HTTPS" yaml:"enable_https"`
+		CertFile      string `env:"CERT_FILE" yaml:"cert_file"`
+		KeyFile       string `env:"KEY_FILE" yaml:"key_file"`
+		TrustedSubnet string `env:"TRUSTED_SUBNET" yaml:"trusted_subnet"`
 	}
 
 	Workers struct {
@@ -57,50 +62,12 @@ type (
 
 const defaultConfigPath = "./config/config.yml"
 
-type configFlags struct {
-	flagPort        *string
-	flagHost        *string
-	flagFileStorage *string
-	flagDBStorage   *string
-	flagHTTPS       *bool
-	flagConfigFile  *string
-}
-
-func newConfigFlags() *configFlags {
-	return &configFlags{}
-}
-
-func (config *configFlags) parseFlags() {
-	config.flagPort = flag.String("a", "", "SERVER_ADDRESS")
-	config.flagHost = flag.String("b", "", "BASE_URL")
-	config.flagFileStorage = flag.String("f", "", "FILE_STORAGE_PATH")
-	config.flagDBStorage = flag.String("d", "", "DATABASE_DSN")
-	config.flagHTTPS = flag.Bool("s", false, "ENABLE_HTTPS")
-	config.flagConfigFile = flag.String("c", defaultConfigPath, "CONFIG")
-	configLongFlag := flag.String("config", defaultConfigPath, "CONFIG")
-	flag.Parse()
-	if *configLongFlag != defaultConfigPath {
-		config.flagConfigFile = configLongFlag
+func checkCIDR(s string) error {
+	_, _, err := net.ParseCIDR(s)
+	if err != nil {
+		log.Printf("CIDR parsing error: %v", err)
 	}
-}
-
-func (c *Config) checkFlags(config *configFlags) {
-
-	if *config.flagPort != "" {
-		c.Server.Port = *config.flagPort
-	}
-	if *config.flagHost != "" {
-		c.Server.Host = *config.flagHost
-	}
-	if *config.flagDBStorage != "" {
-		c.Storage.DataSourceName = *config.flagDBStorage
-	}
-	if *config.flagFileStorage != "" {
-		c.Storage.FilePath = *config.flagFileStorage
-	}
-	if *config.flagHTTPS {
-		c.Security.EnableHTTPS = *config.flagHTTPS
-	}
+	return err
 }
 
 // NewConfig returns app config.
@@ -125,5 +92,8 @@ func LoadConfig() *Config {
 	}
 	Cfg.checkFlags(parsedFlags)
 
+	if checkCIDR(Cfg.Security.TrustedSubnet) != nil {
+		Cfg.Security.TrustedSubnet = ""
+	}
 	return Cfg
 }

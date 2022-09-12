@@ -16,4 +16,5 @@ type Storage interface {
 		batch models.BatchURLs,
 		user string) (result models.BatchShortURLs, err error)
 	DeleteBatch(ctx context.Context, batch models.BatchForDelete, user string) (err error)
+	GetStat() (stat models.Stat, err error)
 }

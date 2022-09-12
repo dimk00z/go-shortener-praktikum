@@ -43,5 +43,22 @@ docker-compose up
 openssl genrsa -out cert/server.key 2048
 openssl req -new -x509 -sha256 -key cert/server.key -out cert/server.crt -days 3650
 ```
-
 флаг `-s` или `env:ENABLE_HTTPS` - для запуска сервера с шифрованием
+
+### gRPC
+Реализована gRPC сервер следующего контракта: 
+
+```
+service Shortener {
+  rpc Ping(EmptyRequest) returns (PingResponse);
+  rpc GetStats(EmptyRequest) returns (StatsResponse);
+  rpc GetByShortURL(ShortURLRequest) returns (URLResponse);
+  rpc SaveURLFromText(URLRequest) returns (URLFromTextResponse);
+  rpc SaveBatch(BatchSaveRequest) returns (BatchSaveResponse);
+  rpc GetUsersURLs(EmptyRequest) returns (UserURLsResponse);
+  rpc DelBatch(DelBatchRequest) returns (DelBatchResponse);
+}
+```
+
+bool флаг `enable_gprc` или `env:ENABLE_GPRC` - для запуска gRPC сервера
+флаг `g` или `env:GRPC_PORT` - порт gRPC сервера формата: ":9000"

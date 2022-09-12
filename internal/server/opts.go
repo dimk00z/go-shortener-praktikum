@@ -47,3 +47,9 @@ func SetTLSConfig(certFile string, keyFile string, port string) ShortenerServerO
 		}
 	}
 }
+
+func SetTrustedSubnet(trustedSubnet string) ShortenerServerOptions {
+	return func(s *ShortenerServer) {
+		s.trustedSubnet = trustedSubnet
+	}
+}

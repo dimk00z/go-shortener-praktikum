@@ -6,6 +6,10 @@ http:
   server_address: ':8080'
   base_url: 'http://localhost:8080'
 
+grpc:
+  port: ":9000"
+  enable_gprc: true
+
 logger:
   log_level: 'debug'
   rollbar_env: 'go-shortener-praktikum'
@@ -21,6 +25,7 @@ security:
   enable_https: false
   key_file: 'cert/server.key'
   cert_file: 'cert/server.crt'
+  trusted_subnet: '127.0.0.0/8'
 
 workers:
   workers_number: 5

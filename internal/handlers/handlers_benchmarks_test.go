@@ -12,13 +12,6 @@ import (
 
 var testsURLs = [3]string{"https://practicum.yandex.ru/", "https://www.google.com/", "https://go.dev/"}
 
-func Fibo(n int) int {
-	if n <= 1 {
-		return n
-	}
-	return Fibo(n-2) + Fibo(n-1)
-}
-
 func BenchmarkShortenerHandler_GetByShortURL(b *testing.B) {
 
 	url := testsURLs[0]

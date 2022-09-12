@@ -242,3 +242,19 @@ func checkValueExists(db *sql.DB, table string, field string, value string) bool
 	}
 	return false
 }
+
+func (st *DataBaseStorage) GetStat() (stat models.Stat, err error) {
+	err = st.db.QueryRow(countUsers).Scan(
+		&stat.Users)
+	if err != nil {
+		st.l.Error("GetStat - countUsers - ", err)
+		return
+	}
+	err = st.db.QueryRow(countShortURLs).Scan(
+		&stat.URLs)
+	if err != nil {
+		st.l.Error("GetStat - countShortURLs - ", err)
+		return
+	}
+	return
+}

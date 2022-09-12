@@ -75,3 +75,11 @@ UPDATE public.web_resourse
 SET is_deleted = TRUE
 WHERE short_url = any ($1) AND user_id=$2;
 `
+
+const countUsers = `
+SELECT count(user_id) from public.user;
+`
+
+const countShortURLs = `
+SELECT count(web_resourse_id) from public.web_resourse;
+`

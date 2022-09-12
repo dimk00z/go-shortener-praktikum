@@ -25,12 +25,13 @@ type serverTLSConfig struct {
 	keyFile  string
 }
 type ShortenerServer struct {
-	port      string
-	Router    *chi.Mux
-	wp        worker.IWorkerPool
-	secretKey string
-	l         *logger.Logger
-	tlsConfig *serverTLSConfig
+	port          string
+	Router        *chi.Mux
+	wp            worker.IWorkerPool
+	secretKey     string
+	l             *logger.Logger
+	tlsConfig     *serverTLSConfig
+	trustedSubnet string
 }
 
 func NewServer(l *logger.Logger, port string, wp worker.IWorkerPool, secretKey string) *ShortenerServer {
@@ -71,6 +72,7 @@ func (s *ShortenerServer) MountHandlers(host string, st storageinterface.Storage
 		handlers.SetStorage(st),
 		handlers.SetWorkerPool(s.wp),
 		handlers.SetLoger(s.l),
+		handlers.SetTrustedSubnet(s.trustedSubnet),
 	}
 
 	for _, opt := range handlerOptions {
@@ -91,6 +93,12 @@ func (s *ShortenerServer) MountHandlers(host string, st storageinterface.Storage
 	apiRouter.Mount("/user", chi.NewRouter().Route("/", func(r chi.Router) {
 		r.Get("/urls", h.GetUserURLs)
 		r.Delete("/urls", h.DeleteUserURLs)
+	}))
+
+	apiRouter.Mount("/internal", chi.NewRouter().Route("/", func(r chi.Router) {
+		// r.Get("/stats", h.ProtectedByTrustedNetwork(h.GetStats))
+		allowedMethods := []string{http.MethodGet}
+		r.Handle("/stats", h.ProtectedByTrustedNetwork(allowedMethods, http.HandlerFunc(h.GetStats)))
 	}))
 
 	s.Router.Mount("/api", apiRouter)
